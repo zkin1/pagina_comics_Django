@@ -1,0 +1,51 @@
+.titulo {
+    text-align: center;
+  }
+  
+  h1 {
+    color: whitesmoke !important; 
+  }
+  
+  body {
+    background-image: url(../img/fondo1.jpg);
+  }
+  
+  .navbar {
+    background-image: url(../img/fondo1.jpg);
+  }
+  
+  .navbar.navbar-light .navbar-brand,
+  .navbar.navbar-light .navbar-nav .nav-link {
+    color: whitesmoke !important;
+  }
+
+  h2{
+    color: whitesmoke !important;
+  }
+  
+  .btn-custom {
+    background-color: #ff0000;
+    color: #ffffff; 
+  }
+  footer.footer {
+    margin-top: 50px;
+    background-image: url(../img/fondo1.jpg);
+  }
+  
+  footer.footer h5 {
+    font-weight: bold;
+    margin-bottom: 1rem;
+  }
+  
+  footer.footer ul.list-unstyled li {
+    margin-bottom: 0.5rem;
+  }
+  
+  footer.footer ul.list-unstyled li a {
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+  
+  footer.footer ul.list-unstyled li a:hover {
+    color: #ccc;
+  }

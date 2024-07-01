@@ -1,0 +1,26 @@
+.table td, .table th {
+    vertical-align: middle;
+    color: whitesmoke;
+  }
+  
+  .table td img {
+    max-width: 100px;
+    height: auto;
+  }
+  
+  .table td .form-control {
+    width: 60px;
+  }
+  
+  .table td .btn {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+  }
+  
+  h1{
+    color: whitesmoke !important;
+  }
+  body{
+    background-image: url(../img/fondo1.jpg)
+  }
+  
