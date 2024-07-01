@@ -3,6 +3,36 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
 from .models import Comic
+from django.db import connection
+from django.http import JsonResponse
+
+
+def get_comics(request):
+    comics = Comic.objects.all()
+    data = []
+    for comic in comics:
+        comic_data = {
+            'nombre': comic.nombre,
+            'precio': float(comic.precio),
+            'foto': comic.foto.url,
+            'descripcion': comic.descripcion,
+            'stock': comic.stock
+        }
+        data.append(comic_data)
+    return JsonResponse(data, safe=False)
+
+
+def lista_comics(request):
+    # Usando objects.all()
+    comics = Comic.objects.all()
+    
+    # Usando una consulta raw
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT * FROM appComics_comic WHERE stock > 0")
+        comics_en_stock = cursor.fetchall()
+    
+    return render(request, 'lista_comics.html', {'comics': comics, 'comics_en_stock': comics_en_stock})
+
 
 def index(request):
     return render(request, 'index.html')

@@ -119,7 +119,7 @@ comicsContainer.on('click', '.add-to-cart', function() {
 
 // Obtener los cómics de Django
 function fetchComics() {
-  fetch('{% url "get_comics" %}')
+  fetch("{% url 'get_comics' %}")
     .then(response => {
       if (!response.ok) {
         throw new Error('Error al obtener los cómics');
