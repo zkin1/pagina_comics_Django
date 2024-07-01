@@ -5,7 +5,17 @@ from django.contrib.auth.decorators import login_required
 from .models import Comic
 from django.db import connection
 from django.http import JsonResponse
+from django.contrib.auth.models import User
+from .models import UsuarioComic
+from django import forms
+from django.views.decorators.http import require_http_methods
+from django.contrib import messages
 
+import json
+
+def productos(request):
+    comics = Comic.objects.all()
+    return render(request, 'productos.html', {'comics': comics})
 
 def get_comics(request):
     print("Entrando a la vista get_comics") 
@@ -51,19 +61,60 @@ def login_view(request):
             return render(request, 'login.html', {'error': 'Credenciales inválidas'})
     return render(request, 'login.html')
 
+class CustomUserCreationForm(UserCreationForm):
+    email = forms.EmailField(required=True)
+
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'password1', 'password2')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Usuario'})
+        self.fields['email'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Correo Electrónico'})
+        self.fields['password1'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Contraseña'})
+        self.fields['password2'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Confirmar Contraseña'})
+
 def register(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('login')
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password1')
+            user = authenticate(username=username, password=password)
+            login(request, user)
+            return redirect('index')
     else:
-        form = UserCreationForm()
+        form = CustomUserCreationForm()
     return render(request, 'register.html', {'form': form})
 
-def productos(request):
-    comics = Comic.objects.all()
-    return render(request, 'productos.html', {'comics': comics})
+@require_http_methods(["GET", "POST"])
+def register_view(request):
+    if request.method == 'POST':
+        if request.content_type == 'application/json':
+            data = json.loads(request.body)
+            form = CustomUserCreationForm(data)
+        else:
+            form = CustomUserCreationForm(request.POST)
+        
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            if request.content_type == 'application/json':
+                return JsonResponse({'success': True})
+            else:
+                messages.success(request, 'Registro exitoso.')
+                return redirect('index')
+        else:
+            if request.content_type == 'application/json':
+                errors = form.errors.as_json()
+                return JsonResponse({'success': False, 'errors': errors})
+            else:
+                messages.error(request, 'Error en el registro. Por favor, corrija los errores.')
+    else:
+        form = CustomUserCreationForm()
+    return render(request, 'register.html', {'form': form})
 
 @login_required
 def carro(request):
@@ -91,6 +142,14 @@ def remover_del_carro(request, comic_id):
     request.session['carrito'] = carrito
     return redirect('carro')
 
-def logout_view(request):
-    logout(request)
-    return redirect('index')
+def login_view(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)  # Iniciar sesión después de una autenticación exitosa
+            return redirect('index')
+        else:
+            return render(request, 'login.html', {'error': 'Credenciales inválidas'})
+    return render(request, 'login.html')

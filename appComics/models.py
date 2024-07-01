@@ -29,3 +29,11 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return self.user.username
+
+class UsuarioComic(models.Model):
+    usuario = models.CharField(max_length=100)
+    correo = models.EmailField()
+    contraseña = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.usuario

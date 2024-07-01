@@ -1,6 +1,3 @@
-let loggedInUser = null;
-
-
 const loginForm = document.getElementById('login-form');
 
 loginForm.addEventListener('submit', (event) => {
@@ -8,19 +5,25 @@ loginForm.addEventListener('submit', (event) => {
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
 
-  fetch('http://localhost:3001/api/registros')
+  fetch('{% url "login" %}', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': '{{ csrf_token }}'
+    },
+    body: JSON.stringify({ username: username, password: password })
+  })
     .then(response => response.json())
     .then(data => {
-      const user = data.find(user => user.usuario === username && user.contraseña === password);
-      if (user) {
+      if (data.success) {
         alert('Inicio de sesión exitoso');
-        localStorage.setItem('loggedInUser', user.usuario);
+        localStorage.setItem('loggedInUser', data.username);
         const previousPage = localStorage.getItem('previousPage');
         if (previousPage) {
           window.location.href = previousPage;
           localStorage.removeItem('previousPage');
         } else {
-          window.location.href = 'index.html';
+          window.location.href = '{% url "index" %}';
         }
       } else {
         alert('Credenciales incorrectas');
@@ -28,6 +31,6 @@ loginForm.addEventListener('submit', (event) => {
     })
     .catch(error => {
       console.error('Error:', error);
-      alert('Error al obtener los datos de usuario')
+      alert('Error al iniciar sesión');
     });
 });
