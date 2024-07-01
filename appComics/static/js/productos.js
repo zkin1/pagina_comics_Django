@@ -8,7 +8,7 @@ function renderComics(comicData) {
 
   comicData.forEach((comic, index) => {
     // Ajustar la URL de la imagen
-    const comicImageUrl = `/${comic.foto}`;
+    const comicImageUrl = `/static${comic.foto}`;
 
     const comicCard = `
       <div class="col-md-4 mb-4">
