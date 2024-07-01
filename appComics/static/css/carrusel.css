@@ -1,0 +1,26 @@
+.carousel.slide {
+  margin-top: 100px;
+}
+
+.carousel-item {
+  margin-top: 400;
+  height: 500px;
+}
+
+.carousel-item img {
+  object-fit: contain;
+  max-height: 300px;
+  max-width: 100%;
+  padding: auto;
+  margin: 0 auto;
+  display: block;
+  margin-top: 60px;
+}
+
+.carousel-caption {
+  position: static;
+  padding: 10px;
+  text-align: center;
+  color: white;
+  margin-top: 60px;
+}

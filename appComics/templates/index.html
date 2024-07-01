@@ -1,0 +1,164 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tienda de Cómics</title>
+  <link rel="stylesheet" href="{% static 'css/carrusel.css' %}">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container">
+      <a class="navbar-brand" href="#">Comics Sharingann</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'index' %}" id="inicio-link">Inicio</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'productos' %}" id="comics-link">Cómics</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'carro' %}" id="carro-link">
+              <i class='bx bx-cart'></i> Carro <span id="cartItemCount" class="badge badge-pill badge-primary">0</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'login' %}" id="login-link"><i class='bx bx-user'></i> Iniciar sesión</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'register' %}" id="registro-link"><i class='bx bx-user-plus'></i> Registro</a>
+          </li>
+          <li class="nav-item" id="user-info" style="display: none;">
+            <span class="nav-link">Bienvenido, <span id="username-display"></span></span>
+          </li>
+          <li class="nav-item" id="logout-link" style="display: none;">
+            <a class="nav-link" href="{% url 'index' %}" onclick="logout()"><i class='bx bx-log-out'></i> Cerrar sesión</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+
+  <div class="container my-5">
+    <h1 class="text-center mb-4">Comics Sharingann</h1>
+    <div class="row justify-content-center mb-4">
+      <div class="col-md-6">
+        <div class="input-group">
+          <input type="text" class="form-control" placeholder="Buscar cómics" id="search-input">
+          <div class="input-group-append">
+            <button class="btn btn-primary" type="button" id="search-btn">Buscar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="filtered-comics-list" class="row">
+
+    </div>
+    <div id="all-comics-list" class="row">
+
+    </div>
+  </div>
+
+  <div id="carouselProductos" class="carousel slide" data-ride="carousel">
+    <ol class="carousel-indicators">
+      
+    </ol>
+    <div class="carousel-inner">
+      
+    </div>
+    <a class="carousel-control-prev" href="#carouselProductos" role="button" data-slide="prev">
+      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      <span class="sr-only">Anterior</span>
+    </a>
+    <a class="carousel-control-next" href="#carouselProductos" role="button" data-slide="next">
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      <span class="sr-only">Siguiente</span>
+    </a>
+  </div>
+
+  <div class="modal fade" id="comicModal" tabindex="-1" role="dialog" aria-labelledby="comicModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="comicModalLabel"></h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <img id="comicModalImage" src="" alt="" class="img-fluid mb-3">
+          <p id="comicModalDescripcion"></p>
+          <p>Precio: <span id="comicModalPrecio"></span></p>
+          <p>Stock: <span id="comicModalStock"></span></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+          <button type="button" class="btn btn-primary add-to-cart" data-id="">Agregar al carrito</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="addToCartModal" tabindex="-1" role="dialog" aria-labelledby="addToCartModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addToCartModalLabel">Producto agregado al carrito</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          El producto se ha agregado correctamente al carrito de compras.
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Seguir comprando</button>
+          <a href="carro.html" class="btn btn-primary">Ir al carrito</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer class="footer bg-dark text-white py-3">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4">
+          <h5>Síguenos</h5>
+          <ul class="list-unstyled">
+            <li><a href="https://www.instagram.com/svasquez.b/" class="text-white"><i class='bx bxl-instagram'></i>Instagram</i></a></li>
+            <li><a href="#" class="text-white"><i class='bx bxl-facebook-square'></i>Facebook</a></li>
+            <li><a href="#" class="text-white"><i class='bx bxl-twitter'></i>Twitter</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h5>Contacto</h5>
+          <p>Correo: comic.sharingann@gmail.com</p>
+          <p>Teléfono: +56 9 6618 9340</p>
+        </div>
+        <div class="col-md-4">
+          <h5>Sobre Nosotros</h5>
+          <p>Somos comic sharingann una empresa dedicada a la venta de productos relacionados con el mundo de los cómics y las novelas gráficas.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+  <script src="https://kit.fontawesome.com/your-font-awesome-kit.js" crossorigin="anonymous"></script>
+  <script src="{% static 'js/api.js' %}"></script>
+  <script src="{% static 'js/buscador.js' %}"></script>
+  <script src="{% static 'js/carrusel.js' %}"></script>
+  <script src="{% static 'js/carro.js' %}"></script>
+  <script src="{% static 'js/utils.js' %}"></script>
+</html>

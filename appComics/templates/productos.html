@@ -1,0 +1,107 @@
+htmlCopy{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <title>Productos</title>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container">
+      <a class="navbar-brand" href="#">Comics Sharingann</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'index' %}" id="inicio-link">Inicio</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'productos' %}" id="comics-link">Cómics</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'carro' %}" id="carro-link">
+              <i class='bx bx-cart'></i> Carro <span id="cartItemCount" class="badge badge-pill badge-primary">0</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'login' %}" id="login-link"><i class='bx bx-user'></i> Iniciar sesión</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'register' %}" id="registro-link"><i class='bx bx-user-plus'></i> Registro</a>
+          </li>
+          <li class="nav-item" id="user-info" style="display: none;">
+            <span class="nav-link">Bienvenido, <span id="username-display"></span></span>
+          </li>
+          <li class="nav-item" id="logout-link" style="display: none;">
+            <a class="nav-link" href="{% url 'index' %}" onclick="logout()"><i class='bx bx-log-out'></i> Cerrar sesión</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+
+  <div class="container my-5">
+    <h1 class="text-center mb-5">Nuestros Comics</h1>
+    <div class="row" id="comics-list">
+      <!-- Aquí se renderizan las tarjetas de los cómics -->
+    </div>
+  </div>
+  <div class="modal fade" id="comicModal" tabindex="-1" role="dialog" aria-labelledby="comicModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="comicModalLabel"></h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <img id="comicModalImage" src="" alt="" class="img-fluid mb-3">
+          <p id="comicModalDescripcion"></p>
+          <p>Precio: <span id="comicModalPrecio"></span></p>
+          <p>Stock: <span id="comicModalStock"></span></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+          <button type="button" class="btn btn-primary" id="addToCartBtn">Agregar al carrito</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="addToCartModal" tabindex="-1" role="dialog" aria-labelledby="addToCartModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addToCartModalLabel">Producto agregado al carrito</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          El producto ha sido agregado al carrito de compras.
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Seguir comprando</button>
+          <a href="carro.html" class="btn btn-primary">Ir al carrito</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="{% static 'js/productos.js' %}"></script>
+  <script src="{% static 'js/carro.js' %}"></script>
+  <script src="{% static 'js/utils.js' %}"></script>
+</body>
+</html>
