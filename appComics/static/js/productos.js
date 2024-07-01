@@ -7,10 +7,13 @@ function renderComics(comicData) {
   comicsContainer.empty();
 
   comicData.forEach((comic, index) => {
+    // Ajustar la URL de la imagen
+    const comicImageUrl = `/static/${comic.foto}`;
+
     const comicCard = `
       <div class="col-md-4 mb-4">
         <div class="card">
-          <img src="${comic.foto}" class="card-img-top" alt="${comic.nombre}">
+          <img src="${comicImageUrl}" class="card-img-top" alt="${comic.nombre}">
           <div class="card-body">
             <h5 class="card-title">${comic.nombre}</h5>
             <p class="card-text">Precio: $${comic.precio}</p>
@@ -31,7 +34,7 @@ function renderComics(comicData) {
             <div class="modal-body">
               <div class="row">
                 <div class="col-md-4">
-                  <img src="${comic.foto}" class="img-fluid" alt="${comic.nombre}">
+                  <img src="${comicImageUrl}" class="img-fluid" alt="${comic.nombre}">
                 </div>
                 <div class="col-md-8">
                   <p><strong>Descripción:</strong> ${comic.descripcion}</p>
@@ -61,6 +64,7 @@ function renderComics(comicData) {
     }
   }
 }
+
 
 // Función para agregar un producto al carro
 function addToCart(comic) {
@@ -119,7 +123,7 @@ comicsContainer.on('click', '.add-to-cart', function() {
 
 // Obtener los cómics de Django
 function fetchComics() {
-  fetch("{% url 'get_comics' %}")
+  fetch("/productos/get_comics/")
     .then(response => {
       if (!response.ok) {
         throw new Error('Error al obtener los cómics');

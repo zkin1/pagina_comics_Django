@@ -8,6 +8,7 @@ from django.http import JsonResponse
 
 
 def get_comics(request):
+    print("Entrando a la vista get_comics") 
     comics = Comic.objects.all()
     data = []
     for comic in comics:
@@ -19,6 +20,7 @@ def get_comics(request):
             'stock': comic.stock
         }
         data.append(comic_data)
+    print("Datos de los cómics:", data) 
     return JsonResponse(data, safe=False)
 
 
