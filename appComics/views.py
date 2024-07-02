@@ -99,7 +99,17 @@ def register_view(request):
             form = CustomUserCreationForm(request.POST)
         
         if form.is_valid():
-            user = form.save()
+            user = form.save(commit=False)
+
+            # Crear el objeto UsuarioComic y guardarlo en la base de datos
+            usuario_comic = UsuarioComic(
+                usuario=user.username,
+                correo=user.email,
+                contraseña=user.password
+            )
+            usuario_comic.save()
+
+            user.save()
             login(request, user)
             if request.content_type == 'application/json':
                 return JsonResponse({'success': True})
@@ -115,6 +125,7 @@ def register_view(request):
     else:
         form = CustomUserCreationForm()
     return render(request, 'register.html', {'form': form})
+
 
 @login_required
 def carro(request):
