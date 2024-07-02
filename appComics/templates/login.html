@@ -51,7 +51,13 @@
 
   <div class="login-container">
     <h2>Inicio de Sesión</h2>
-    <form id="login-form">
+    {% if error %}
+      <div class="alert alert-danger" role="alert">
+        {{ error }}
+      </div>
+    {% endif %}
+    <form method="post" action="{% url 'login' %}">
+      {% csrf_token %}
       <div class="input-box">
         <input type="text" id="username" name="username" required>
         <span class="input-line"></span>
@@ -70,6 +76,5 @@
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
   <script src="{% static 'js/login.js' %}"></script>
   <script src="{% static 'js/register.js' %}"></script>
-  <script src="{% static 'js/utils.js' %}"></script>
 </body>
 </html>

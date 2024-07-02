@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
   <meta name="get-comics-url" content="{% url 'get_comics' %}">   
+  <meta name="check-login-status-url" content="{% url 'check_login_status' %}">
 </head>
 <body>
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -157,9 +158,8 @@
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
   <script src="https://kit.fontawesome.com/your-font-awesome-kit.js" crossorigin="anonymous"></script>
-  <script src="{% static 'js/api.js' %}"></script>
   <script src="{% static 'js/buscador.js' %}"></script>
   <script src="{% static 'js/carrusel.js' %}"></script>
   <script src="{% static 'js/carro.js' %}"></script>
-  <script src="{% static 'js/utils.js' %}"></script>
+  <script src="{% static 'js/login.js' %}"></script>
 </html>

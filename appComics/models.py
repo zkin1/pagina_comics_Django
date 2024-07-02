@@ -22,14 +22,6 @@ class Comic(models.Model):
     def __str__(self):
         return self.nombre
 
-class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    direccion_envio = models.CharField(max_length=255, blank=True)
-    telefono = models.CharField(max_length=20, blank=True)
-
-    def __str__(self):
-        return self.user.username
-
 class UsuarioComic(models.Model):
     usuario = models.CharField(max_length=100)
     correo = models.EmailField()

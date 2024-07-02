@@ -2,6 +2,7 @@ from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
 from .views import register_view
+
 urlpatterns = [
     path('', views.index, name='index'),  # Página principal
     path('productos/', views.productos, name='productos'),  # Lista de productos
@@ -12,4 +13,5 @@ urlpatterns = [
     path('carro/agregar/<int:comic_id>/', views.agregar_al_carro, name='agregar_al_carro'),  # Agregar al carro
     path('carro/remover/<int:comic_id>/', views.remover_del_carro, name='remover_del_carro'),  # Remover del carro
     path('logout/', auth_views.LogoutView.as_view(next_page='/'), name='logout'),  # Cerrar sesión
+    path('check-login-status/', views.check_login_status, name='check_login_status'),  # Verificar estado de login
 ]

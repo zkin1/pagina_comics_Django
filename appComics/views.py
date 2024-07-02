@@ -8,10 +8,19 @@ from django.http import JsonResponse
 from django.contrib.auth.models import User
 from .models import UsuarioComic
 from django import forms
+from django.contrib.auth import logout as auth_logout
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
-
+from django.views.decorators.csrf import ensure_csrf_cookie
 import json
+
+
+def logout_view(request):
+    try:
+        del request.session['usuario']
+    except KeyError:
+        pass
+    return redirect('index')
 
 def productos(request):
     comics = Comic.objects.all()
@@ -46,20 +55,34 @@ def lista_comics(request):
     return render(request, 'lista_comics.html', {'comics': comics, 'comics_en_stock': comics_en_stock})
 
 
-def index(request):
-    return render(request, 'index.html')
+@login_required
+def check_login_status(request):
+    return JsonResponse({
+        'is_authenticated': True,
+        'username': request.user.username
+    })
+
+def check_login_status_anonymous(request):
+    return JsonResponse({
+        'is_authenticated': False
+    })
 
 def login_view(request):
     if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            return redirect('index')
-        else:
-            return render(request, 'login.html', {'error': 'Credenciales inválidas'})
+        data = json.loads(request.body)
+        usuario = data.get('usuario')
+        contraseña = data.get('contraseña')
+        
+        # Verificar las credenciales del usuario
+        try:
+            user = UsuarioComic.objects.get(usuario=usuario, contraseña=contraseña)
+            request.session['usuario'] = user.usuario  # Almacena el nombre de usuario en la sesión
+            return JsonResponse({'success': True, 'username': user.usuario})
+        except UsuarioComic.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Credenciales incorrectas'})
+    
     return render(request, 'login.html')
+
 
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -153,14 +176,7 @@ def remover_del_carro(request, comic_id):
     request.session['carrito'] = carrito
     return redirect('carro')
 
-def login_view(request):
-    if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)  # Iniciar sesión después de una autenticación exitosa
-            return redirect('index')
-        else:
-            return render(request, 'login.html', {'error': 'Credenciales inválidas'})
-    return render(request, 'login.html')
+
+@ensure_csrf_cookie
+def index(request):
+    return render(request, 'index.html')
