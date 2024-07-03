@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .then(data => {
             if (data.success) {
-                console.log('Pedido creado con éxito:', data.pedido_id);
+                mostrarNotificacion("¡Su pedido ha sido enviado! Le enviaremos un correo con los detalles. El pago se realizará al recibir el producto.");
             } else {
                 console.error('Error al crear pedido:', data.error);
             }
@@ -42,4 +42,15 @@ document.addEventListener('DOMContentLoaded', function () {
             console.error('Error:', error.message);
         });
     });
+        function mostrarNotificacion(mensaje) {
+        const notificacion = document.createElement('div');
+        notificacion.classList.add('notificacion');
+        notificacion.textContent = mensaje;
+        document.body.appendChild(notificacion);
+    
+        setTimeout(() => {
+            notificacion.remove(); // Elimina la notificación
+            window.location.href = "/"; // Redirige a index
+        }, 10000); // 10 segundos (10000 milisegundos)
+    }
 });

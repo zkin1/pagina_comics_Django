@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Envio</title>
     {% load static %}
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/envio.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
@@ -51,7 +51,7 @@
 
     <div class="container mt-5">
         <h2>Formulario de Envío</h2>
-        <form id="envioForm" method="post" data-url="{% url 'submit_envio' %}">
+        <div class="envioFormContainer"> <form id="envioForm" method="post" data-url="{% url 'submit_envio' %}">
             {% csrf_token %}
             <div class="form-group">
                 <label for="nombreCompleto">Nombre Completo</label>
@@ -74,7 +74,7 @@
                     <option value="TR">Transferencia</option>
                 </select>
             </div>
-            <button type="submit">Enviar</button>
+            <button class="btn" type="submit">Enviar</button>
         </form>
     </div>
 
