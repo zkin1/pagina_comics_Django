@@ -306,70 +306,63 @@ def submit_envio(request):
             'forma_pago': request.POST.get('forma_pago')
         }
         logger.info(f"Datos recibidos: {data}")
-
         for field, value in data.items():
             if not value:
                 logger.warning(f"Campo requerido faltante: {field}")
                 return JsonResponse({'success': False, 'error': f'Campo requerido: {field}'}, status=400)
-
         pedido = Pedido.objects.create(**data)
         logger.info(f"Pedido creado con ID: {pedido.id}")
-
         # Obtener los items del carrito desde la solicitud POST
         cart_items = json.loads(request.POST.get('cart_items', '[]'))
         logger.info(f"Items del carrito recibidos: {cart_items}")
-
         # Verificar si hay items en el carrito
         if not cart_items:
             logger.warning("No se encontraron items en el carrito")
             return JsonResponse({'success': False, 'error': 'No se encontraron items en el carrito'}, status=400)
-
         # Crear los detalles del pedido
         for item in cart_items:
             comic_nombre = item.get('nombre')
             cantidad = item.get('quantity')
             precio_unitario = item.get('precio')
-
             if not comic_nombre or not cantidad or not precio_unitario:
                 logger.warning(f"Datos incompletos para el item: {item}")
                 continue
-
             DetallesPedido.objects.create(
                 pedido=pedido,
                 comic_nombre=comic_nombre,
                 cantidad=cantidad,
                 precio_unitario=precio_unitario
             )
-
         # Obtener el correo del usuario autenticado
         user_email = request.user.email
         logger.info(f"Correo del usuario: {user_email}")
-
         # Enviar correo electrónico
         subject = 'Confirmación de pedido'
         message = f"""
             Gracias por tu pedido, {data['nombre_completo']}!
-
             Detalles del pedido:
             Dirección de envío: {data['direccion']}
             Teléfono: {data['telefono']}
             Forma de pago: {pedido.get_forma_pago_display()}
-
+            Cómics comprados:
+        """
+        # Agregar los detalles de los cómics comprados al mensaje
+        for detalle in pedido.detalles.all():
+            message += f"""
+            - {detalle.comic_nombre} (Cantidad: {detalle.cantidad}, Precio unitario: ${detalle.precio_unitario})
+            """
+        message += """
             Nos pondremos en contacto contigo pronto para confirmar el envío.
         """
         from_email = settings.EMAIL_HOST_USER
         recipient_list = [user_email]  # Usa el email del usuario autenticado
-
         logger.info("Enviando correo electrónico")
         send_mail(subject, message, from_email, recipient_list)
         logger.info("Correo electrónico enviado con éxito")
-
         # Limpiar el carrito después de enviar el correo
         request.session['cart'] = {}
         request.session.modified = True
-
         return JsonResponse({'success': True})
-
     except Exception as e:
         logger.error(f"Error en submit_envio: {str(e)}")
         logger.error(traceback.format_exc())
