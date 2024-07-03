@@ -15,50 +15,39 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import Pedido
 import traceback
 import logging
-import traceback
 
 
 logger = logging.getLogger(__name__)
 
-
-
-
-
-
 @login_required
 @require_POST
-
-
 def add_to_cart(request):
     try:
         data = json.loads(request.body)
         comic_name = data.get('comicName')
-        quantity = data.get('quantity', 1)
+        quantity = int(data.get('quantity', 1))
         
         if not comic_name:
             return JsonResponse({'success': False, 'error': 'Datos incompletos'}, status=400)
         
-        try:
-            comic = Comic.objects.get(nombre=comic_name)
-        except Comic.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Comic no encontrado'}, status=404)
-        
-        if quantity > comic.stock:
-            return JsonResponse({'success': False, 'error': 'Stock insuficiente'}, status=400)
-        
+        comic = get_object_or_404(Comic, nombre=comic_name)
         cart = request.session.get('cart', {})
         
+        current_quantity = cart.get(comic_name, {}).get('quantity', 0)
+        new_quantity = current_quantity + quantity
+        
+        if new_quantity > comic.stock:
+            return JsonResponse({'success': False, 'error': 'Stock insuficiente'}, status=400)
+        
         if comic_name in cart:
-            cart[comic_name]['quantity'] += quantity
+            cart[comic_name]['quantity'] = new_quantity
         else:
             cart[comic_name] = {
                 'precio': float(comic.precio),
                 'foto': comic.foto.url,
-                'quantity': quantity
+                'quantity': quantity,
+                'stock': comic.stock
             }
-        
-        comic.stock -= quantity
-        comic.save()
         
         request.session['cart'] = cart
         request.session.modified = True
@@ -71,9 +60,8 @@ def add_to_cart(request):
             'total_items': total_items
         })
     except Exception as e:
-        print(f"Error en add_to_cart: {str(e)}")
+        logger.error(f"Error en add_to_cart: {str(e)}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
-
 
 def logout_view(request):
     logout(request)
@@ -233,9 +221,9 @@ def update_cart_item_quantity(request):
     try:
         data = json.loads(request.body)
         comic_name = data.get('nombre')
-        quantity = data.get('quantity')
+        new_quantity = int(data.get('quantity'))
         
-        if not comic_name or not quantity:
+        if not comic_name or new_quantity is None:
             return JsonResponse({'success': False, 'error': 'Datos incompletos'}, status=400)
         
         try:
@@ -246,14 +234,8 @@ def update_cart_item_quantity(request):
         cart = request.session.get('cart', {})
         
         if comic_name in cart:
-            current_quantity = cart[comic_name]['quantity']
-            new_quantity = quantity
-            
-            if new_quantity > comic.stock + current_quantity:
-                return JsonResponse({'success': False, 'error': 'Stock insuficiente'}, status=400)
-            
-            comic.stock += current_quantity - new_quantity
-            comic.save()
+            if new_quantity > comic.stock:
+                new_quantity = comic.stock
             
             cart[comic_name]['quantity'] = new_quantity
             request.session['cart'] = cart
@@ -266,7 +248,8 @@ def update_cart_item_quantity(request):
                     'precio': item['precio'],
                     'foto': item['foto'],
                     'quantity': item['quantity'],
-                    'subtotal': item['precio'] * item['quantity']
+                    'subtotal': item['precio'] * item['quantity'],
+                    'stock': Comic.objects.get(nombre=nombre).stock  # Añadir stock actual
                 })
             
             return JsonResponse({'success': True, 'cart_items': cart_items})
@@ -290,10 +273,12 @@ def submit_envio(request):
             'forma_pago': request.POST.get('forma_pago')
         }
 
+        logger.info(f"Datos recibidos: {data}")
+    
         for field, value in data.items():
             if not value:
                 return JsonResponse({'success': False, 'error': f'Campo requerido: {field}'}, status=400)
-        
+      
         pedido = Pedido.objects.create(**data)
         
         return JsonResponse({'success': True, 'pedido_id': pedido.id})

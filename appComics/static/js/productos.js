@@ -68,7 +68,7 @@ function renderComics(comicData) {
 function addToCart(comicName, quantity) {
   const comic = comics.find(comic => comic.nombre === comicName);
   
-  if (comic && quantity <= comic.stock) {
+  if (comic) {
     fetch('/carro/add_item/', {
       method: 'POST',
       headers: {
@@ -77,8 +77,9 @@ function addToCart(comicName, quantity) {
       },
       body: JSON.stringify({ comicName: comicName, quantity: quantity })
     })
-    .then(response => {
-      if (response.ok) {
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
         updateCartItemCount();
         Swal.fire({
           title: '¡Producto agregado al carrito!',
@@ -93,14 +94,15 @@ function addToCart(comicName, quantity) {
           }
         });
       } else {
-        console.error('Error al agregar el producto al carrito');
+        Swal.fire('Error', data.error, 'error');
       }
     })
     .catch(error => {
       console.error('Error al agregar el producto al carrito:', error);
+      Swal.fire('Error', 'Hubo un problema al agregar el producto al carrito', 'error');
     });
   } else {
-    Swal.fire('Stock insuficiente', 'No hay suficiente stock disponible para agregar el producto al carrito', 'warning');
+    Swal.fire('Error', 'Producto no encontrado', 'error');
   }
 }
 

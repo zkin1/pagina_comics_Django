@@ -52,3 +52,11 @@ class Pedido(models.Model):
 
     def __str__(self):
         return f"{self.nombre_completo} - {self.get_forma_pago_display()}"
+    
+class CarritoItem(models.Model):
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    comic = models.ForeignKey(Comic, on_delete=models.CASCADE)
+    cantidad = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        unique_together = ('usuario', 'comic')

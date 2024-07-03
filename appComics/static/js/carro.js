@@ -19,7 +19,7 @@ function renderCartItems(cartItems) {
         </td>
         <td>$${item.precio}</td>
         <td>
-          <input type="number" class="form-control quantity" value="${item.quantity}" min="1" data-name="${item.nombre}">
+          <input type="number" class="form-control quantity" value="${item.quantity}" min="1" max="${item.stock}" data-name="${item.nombre}">
         </td>
         <td>$${item.subtotal.toFixed(2)}</td>
         <td>
@@ -65,6 +65,7 @@ function updateCartItemQuantity(nombre, quantity) {
       calculateCartTotal(data.cart_items);
     } else {
       console.error('Error al actualizar la cantidad:', data.error);
+      alert(data.error);
     }
   })
   .catch(error => console.error('Error:', error));
