@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Envio</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <meta name="get-comics-url" content="{% url 'get_comics' %}">   
+    <meta name="check-login-status-url" content="{% url 'check_login_status' %}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+          <a class="navbar-brand" href="#">Comics Sharingann</a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'index' %}" id="inicio-link">Inicio</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'productos' %}" id="comics-link">Cómics</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'carro' %}" id="carro-link">
+                  <i class='bx bx-cart'></i> Carro <span id="cartItemCount" class="badge badge-pill badge-primary">0</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'login' %}" id="login-link"><i class='bx bx-user'></i> Iniciar sesión</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'register' %}" id="registro-link"><i class='bx bx-user-plus'></i> Registro</a>
+              </li>
+              <li class="nav-item" id="user-info" style="display: none;">
+                <span class="nav-link">Bienvenido, <span id="username-display"></span></span>
+              </li>
+              <li class="nav-item" id="logout-link" style="display: none;">
+                <a class="nav-link" href="{% url 'index' %}" onclick="logout()"><i class='bx bx-log-out'></i> Cerrar sesión</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+
+    <div class="container mt-5">
+        <h2>Formulario de Envío</h2>
+        <form id="envioForm" method="post" data-url="{% url 'submit_envio' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="nombreCompleto">Nombre Completo</label>
+                <input type="text" class="form-control" id="nombreCompleto" name="nombre_completo" required>
+            </div>
+            <div class="form-group">
+                <label for="telefono">Teléfono</label>
+                <input type="text" class="form-control" id="telefono" name="telefono" required>
+            </div>
+            <div class="form-group">
+                <label for="direccion">Dirección</label>
+                <textarea class="form-control" id="direccion" name="direccion" rows="3" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="formaPago">Forma de Pago</label>
+                <select class="form-control" id="formaPago" name="forma_pago" required>
+                    <option value="EF">Efectivo</option>
+                    <option value="DE">Débito</option>
+                    <option value="CR">Crédito</option>
+                    <option value="TR">Transferencia</option>
+                </select>
+            </div>
+            <button type="submit">Enviar</button>
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script src="{% static 'js/envio.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'js/buscador.js' %}"></script>
+    <script src="{% static 'js/carro.js' %}"></script>
+    <script src="{% static 'js/login.js' %}"></script>
+    <script>src="{% static 'js/productos.js' %}"</script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+        
+</body>
+</html>

@@ -29,3 +29,26 @@ class UsuarioComic(models.Model):
 
     def __str__(self):
         return self.usuario
+
+class Pedido(models.Model):
+    nombre_completo = models.CharField(max_length=200)
+    telefono = models.CharField(max_length=15)
+    direccion = models.TextField()
+    EFECTIVO = 'EF'
+    DEBITO = 'DE'
+    CREDITO = 'CR'
+    TRANSFERENCIA = 'TR'
+    FORMA_PAGO_CHOICES = [
+        (EFECTIVO, 'Efectivo'),
+        (DEBITO, 'Débito'),
+        (CREDITO, 'Crédito'),
+        (TRANSFERENCIA, 'Transferencia'),
+    ]
+    forma_pago = models.CharField(
+        max_length=2,
+        choices=FORMA_PAGO_CHOICES,
+        default=EFECTIVO,
+    )
+
+    def __str__(self):
+        return f"{self.nombre_completo} - {self.get_forma_pago_display()}"

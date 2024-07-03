@@ -2,6 +2,7 @@
 const cartItemsContainer = document.getElementById('cartItems');
 const cartTotalElement = document.getElementById('cartTotal');
 const cartItemCountElement = document.getElementById('cartItemCount');
+const proceedToPaymentButton = document.getElementById('proceedToPaymentButton'); // Referencia al botón
 
 // Función para renderizar los elementos del carro
 function renderCartItems(cartItems) {
@@ -157,6 +158,11 @@ function loadCartItems() {
     });
 }
 
+// Función para redirigir al formulario de envío
+function proceedToPayment() {
+  window.location.href = '/envio/';
+}
+
 // Inicialización y event listeners
 document.addEventListener('DOMContentLoaded', () => {
   if (cartItemsContainer) {
@@ -176,6 +182,11 @@ document.addEventListener('DOMContentLoaded', () => {
         removeCartItem(nombre);
       }
     });
+  }
+
+  // Añadir el event listener al botón de proceder al pago
+  if (proceedToPaymentButton) {
+    proceedToPaymentButton.addEventListener('click', proceedToPayment);
   }
 });
 

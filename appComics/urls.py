@@ -18,5 +18,7 @@ urlpatterns = [
     path('carro/update_quantity/', views.update_cart_item_quantity, name='update_cart_item_quantity'),
     path('check-login-status/', views.check_login_status, name='check_login_status'),
     path('carro/remove_item/', views.remove_cart_item, name='remove_cart_item'),
+    path('envio/', views.envio, name='envio'),
+    path('submit_envio/', views.submit_envio, name='submit_envio'),
     path('carro/get_item_count/', views.get_item_count, name='get_item_count')
 ]

@@ -11,9 +11,16 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from .models import Comic, UsuarioComic
 from django import forms
 import json
+from django.views.decorators.csrf import csrf_exempt
+from .models import Pedido
+import traceback
+import logging
+
 
 @login_required
 @require_POST
+
+
 def add_to_cart(request):
     try:
         data = json.loads(request.body)
@@ -261,6 +268,33 @@ def update_cart_item_quantity(request):
         print(f"Error en update_cart_item_quantity: {str(e)}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
+def envio(request):
+    return render(request, 'envio.html')
+
+@require_POST
+@csrf_exempt
+def submit_envio(request):
+    try:
+        data = {
+            'nombre_completo': request.POST.get('nombre_completo'),
+            'telefono': request.POST.get('telefono'),
+            'direccion': request.POST.get('direccion'),
+            'forma_pago': request.POST.get('forma_pago')
+        }
+
+        logger.info(f"Datos recibidos: {data}")
+    
+        for field, value in data.items():
+            if not value:
+                return JsonResponse({'success': False, 'error': f'Campo requerido: {field}'}, status=400)
+      
+        pedido = Pedido.objects.create(**data)
+        
+        return JsonResponse({'success': True, 'pedido_id': pedido.id})
+    except Exception as e:
+        logger.error(f"Error en submit_envio: {str(e)}")
+        logger.error(traceback.format_exc())
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @ensure_csrf_cookie
 def index(request):
