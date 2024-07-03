@@ -66,40 +66,42 @@ function renderComics(comicData) {
 
 // Función para agregar un producto al carrito
 function addToCart(comicName, quantity) {
-  fetch('/carro/add_item/', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRFToken': getCookie('csrftoken')
-    },
-    body: JSON.stringify({ comicName: comicName, quantity: quantity })
-  })
-  .then(response => {
-    if (response.ok) {
-      // Actualizar el conteo de artículos en el carrito
-      updateCartItemCount();
-      
-      // Mostrar ventana de confirmación con SweetAlert
-      Swal.fire({
-        title: '¡Producto agregado al carrito!',
-        icon: 'success',
-        showCancelButton: true,
-        confirmButtonText: 'Ir al carrito',
-        cancelButtonText: 'Seguir comprando',
-        reverseButtons: true
-      }).then((result) => {
-        if (result.isConfirmed) {
-          // Redirigir al carrito si se hace clic en "Ir al carrito"
-          window.location.href = '/carro/';
-        }
-      });
-    } else {
-      console.error('Error al agregar el producto al carrito');
-    }
-  })
-  .catch(error => {
-    console.error('Error al agregar el producto al carrito:', error);
-  });
+  const comic = comics.find(comic => comic.nombre === comicName);
+  
+  if (comic && quantity <= comic.stock) {
+    fetch('/carro/add_item/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify({ comicName: comicName, quantity: quantity })
+    })
+    .then(response => {
+      if (response.ok) {
+        updateCartItemCount();
+        Swal.fire({
+          title: '¡Producto agregado al carrito!',
+          icon: 'success',
+          showCancelButton: true,
+          confirmButtonText: 'Ir al carrito',
+          cancelButtonText: 'Seguir comprando',
+          reverseButtons: true
+        }).then((result) => {
+          if (result.isConfirmed) {
+            window.location.href = '/carro/';
+          }
+        });
+      } else {
+        console.error('Error al agregar el producto al carrito');
+      }
+    })
+    .catch(error => {
+      console.error('Error al agregar el producto al carrito:', error);
+    });
+  } else {
+    Swal.fire('Stock insuficiente', 'No hay suficiente stock disponible para agregar el producto al carrito', 'warning');
+  }
 }
 
 // Actualiza el conteo de artículos en el carrito
