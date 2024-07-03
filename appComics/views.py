@@ -15,6 +15,14 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import Pedido
 import traceback
 import logging
+import traceback
+
+
+logger = logging.getLogger(__name__)
+
+
+
+
 
 
 @login_required
@@ -282,12 +290,10 @@ def submit_envio(request):
             'forma_pago': request.POST.get('forma_pago')
         }
 
-        logger.info(f"Datos recibidos: {data}")
-    
         for field, value in data.items():
             if not value:
                 return JsonResponse({'success': False, 'error': f'Campo requerido: {field}'}, status=400)
-      
+        
         pedido = Pedido.objects.create(**data)
         
         return JsonResponse({'success': True, 'pedido_id': pedido.id})
