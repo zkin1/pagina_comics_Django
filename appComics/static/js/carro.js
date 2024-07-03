@@ -146,6 +146,8 @@ function loadCartItems() {
       if (data.cart_items && Array.isArray(data.cart_items)) {
         renderCartItems(data.cart_items);
         calculateCartTotal(data.cart_items);
+        // Almacenar los items del carrito en la sesión
+        sessionStorage.setItem('cart', JSON.stringify(data.cart_items));
       } else {
         console.error('Unexpected data format:', data);
         // Muestra un mensaje de error al usuario

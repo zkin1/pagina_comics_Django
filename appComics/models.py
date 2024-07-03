@@ -60,3 +60,16 @@ class CarritoItem(models.Model):
 
     class Meta:
         unique_together = ('usuario', 'comic')
+
+
+class DetallesPedido(models.Model):
+    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='detalles')
+    comic_nombre = models.CharField(max_length=200)
+    cantidad = models.PositiveIntegerField()
+    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.comic_nombre} - {self.cantidad} unidades"
+
+    def subtotal(self):
+        return self.cantidad * self.precio_unitario
