@@ -11,6 +11,8 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from .models import Comic, UsuarioComic
 from django import forms
 import json
+from django.db.models import Sum
+from .models import Comic, CarritoItem
 from django.views.decorators.csrf import csrf_exempt
 from .models import Pedido
 import traceback
@@ -31,28 +33,35 @@ def add_to_cart(request):
             return JsonResponse({'success': False, 'error': 'Datos incompletos'}, status=400)
         
         comic = get_object_or_404(Comic, nombre=comic_name)
-        cart = request.session.get('cart', {})
         
-        current_quantity = cart.get(comic_name, {}).get('quantity', 0)
-        new_quantity = current_quantity + quantity
+        # Obtener o crear el item del carrito
+        cart_item, created = CarritoItem.objects.get_or_create(
+            usuario=request.user,
+            comic=comic,
+            defaults={'cantidad': 0}
+        )
         
+        # Actualizar la cantidad
+        new_quantity = cart_item.cantidad + quantity
         if new_quantity > comic.stock:
             return JsonResponse({'success': False, 'error': 'Stock insuficiente'}, status=400)
         
-        if comic_name in cart:
-            cart[comic_name]['quantity'] = new_quantity
-        else:
-            cart[comic_name] = {
-                'precio': float(comic.precio),
-                'foto': comic.foto.url,
-                'quantity': quantity,
-                'stock': comic.stock
-            }
+        cart_item.cantidad = new_quantity
+        cart_item.save()
         
+        # Actualizar la sesión del carrito
+        cart = request.session.get('cart', {})
+        cart[comic_name] = {
+            'precio': float(comic.precio),
+            'foto': comic.foto.url,
+            'quantity': new_quantity,
+            'stock': comic.stock
+        }
         request.session['cart'] = cart
         request.session.modified = True
         
-        total_items = sum(item['quantity'] for item in cart.values())
+        total_items = CarritoItem.objects.filter(usuario=request.user).aggregate(
+            total=Sum('cantidad'))['total'] or 0
         
         return JsonResponse({
             'success': True,
@@ -103,10 +112,24 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
+            
+            # Cargar los items del carrito del usuario
+            cart_items = CarritoItem.objects.filter(usuario=user)
+            cart = {}
+            for item in cart_items:
+                cart[item.comic.nombre] = {
+                    'precio': float(item.comic.precio),
+                    'foto': item.comic.foto.url,
+                    'quantity': item.cantidad,
+                    'stock': item.comic.stock
+                }
+            request.session['cart'] = cart
+            request.session.modified = True
+            
             if request.content_type == 'application/json':
                 return JsonResponse({'success': True, 'username': user.username})
             else:
-                return redirect('index')  # Redirige a la página principal después del login
+                return redirect('index')
         else:
             if request.content_type == 'application/json':
                 return JsonResponse({'success': False, 'error': 'Credenciales incorrectas'}, status=400)
@@ -198,6 +221,9 @@ def remove_cart_item(request):
             request.session['cart'] = cart
             request.session.modified = True
             
+            # Eliminar el item del carrito en la base de datos
+            CarritoItem.objects.filter(usuario=request.user, comic__nombre=comic_name).delete()
+            
             cart_items = []
             for nombre, item in cart.items():
                 cart_items.append({
@@ -241,6 +267,9 @@ def update_cart_item_quantity(request):
             request.session['cart'] = cart
             request.session.modified = True
             
+            # Actualizar el item del carrito en la base de datos
+            CarritoItem.objects.filter(usuario=request.user, comic=comic).update(cantidad=new_quantity)
+            
             cart_items = []
             for nombre, item in cart.items():
                 cart_items.append({
@@ -249,7 +278,7 @@ def update_cart_item_quantity(request):
                     'foto': item['foto'],
                     'quantity': item['quantity'],
                     'subtotal': item['precio'] * item['quantity'],
-                    'stock': Comic.objects.get(nombre=nombre).stock  # Añadir stock actual
+                    'stock': Comic.objects.get(nombre=nombre).stock
                 })
             
             return JsonResponse({'success': True, 'cart_items': cart_items})
