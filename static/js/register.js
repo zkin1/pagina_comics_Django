@@ -1,40 +1,63 @@
-// Obtener el formulario de registro
-const registerForm = document.getElementById('register-form');
+document.addEventListener('DOMContentLoaded', function() {
+  const registerForm = document.getElementById('register-form');
 
-// Manejar el envío del formulario
-registerForm.addEventListener('submit', (event) => {
-  event.preventDefault(); // Evitar el envío del formulario
+  if (registerForm) {
+      registerForm.addEventListener('submit', function(event) {
+          event.preventDefault();
 
-  // Obtener los valores de los campos
-  const username = document.getElementById('username').value;
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
-  const confirmPassword = document.getElementById('confirm-password').value;
+          // Obtener los valores de los campos
+          const username = document.getElementById('username').value;
+          const email = document.getElementById('email').value;
+          const password1 = document.getElementById('password1').value;
+          const password2 = document.getElementById('password2').value;
 
-  // Validar que las contraseñas coincidan
-  if (password !== confirmPassword) {
-    alert('Las contraseñas no coinciden');
-    return;
+          const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]');
+
+          if (!csrftoken) {
+              console.error('No se encontró el token CSRF');
+              return;
+          }
+
+          // Validar que las contraseñas coincidan
+          if (password1 !== password2) {
+              alert('Las contraseñas no coinciden');
+              return;
+          }
+
+          // Enviar los datos al servidor utilizando Django
+          fetch('/register/', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRFToken': csrftoken.value
+              },
+              body: JSON.stringify({
+                  username: username,
+                  email: email,
+                  password1: password1,
+                  password2: password2
+              })
+          })
+          .then(response => response.json())
+          .then(data => {
+              if (data.success) {
+                  alert('Registro exitoso');
+                  window.location.href = '/';  // Redirige a la página principal
+              } else {
+                  let errorMessage = 'Error al registrar:';
+                  const errors = JSON.parse(data.errors);
+                  for (let field in errors) {
+                      errorMessage += `\n${field}: ${errors[field][0].message}`;
+                  }
+                  alert(errorMessage);
+              }
+          })
+          .catch(error => {
+              console.error('Error:', error);
+              alert('Error al registrar el usuario');
+          });
+      });
+  } else {
+      console.error('No se encontró el formulario de registro');
   }
-
-  // Aquí puedes realizar la lógica de registro
-  // Enviar los datos a la API
-  fetch('http://localhost:3001/api/registros', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ usuario: username, email: email, contraseña: password })
-  })
-    .then(response => response.text())
-    .then(data => {
-      console.log(data);
-      alert('Registro exitoso');
-      // Redirigir al usuario a la página de inicio de sesión
-      window.location.href = 'login.html';
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      alert('Error al registrar el usuario');
-    });
-}); // Cerrar el bloque de la función addEventListener y el bloque del archivo register.js
+});

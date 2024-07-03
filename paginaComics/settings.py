@@ -104,6 +104,10 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
@@ -123,6 +127,7 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'appComics', 'static'),
 ]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
@@ -132,10 +137,10 @@ MEDIA_URL = '/img/'
 
 MEDIA_ROOT = BASE_DIR / 'img' 
 
-LOGIN_URL = 'login'
+LOGIN_URL = '/login/'
 
-LOGIN_REDIRECT_URL = '/'  # Redirige después del login
+LOGIN_REDIRECT_URL = '/'
 
-LOGOUT_REDIRECT_URL = '/'  # Redirige después del logout
+DEBUG = True
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')

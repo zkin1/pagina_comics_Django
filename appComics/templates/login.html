@@ -56,7 +56,7 @@
         {{ error }}
       </div>
     {% endif %}
-    <form method="post" action="{% url 'login' %}">
+    <form method="post" id="login-form" action="{% url 'login' %}">
       {% csrf_token %}
       <div class="input-box">
         <input type="text" id="username" name="username" required>

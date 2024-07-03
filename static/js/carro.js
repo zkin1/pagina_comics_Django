@@ -12,7 +12,7 @@ function renderCartItems(cartItems) {
     const row = document.createElement('tr');
     row.innerHTML = `
       <td>
-        <img src="http://localhost:3000${item.foto}" alt="${item.nombre}" width="50">
+        <img src="${item.foto}" alt="${item.nombre}" width="50">
         ${item.nombre}
       </td>
       <td>$${item.precio}</td>
@@ -28,47 +28,69 @@ function renderCartItems(cartItems) {
   });
 
   // Actualizar el contador de elementos en el carro
-  cartItemCountElement.textContent = cartItems.length;
+  updateCartItemCount();
 }
 
 // Función para calcular el total del carro
 function calculateCartTotal(cartItems) {
-    const total = cartItems.reduce((acc, item) => {
-      if (typeof item.subtotal === 'number') {
-        return acc + item.subtotal;
-      } else {
-        return acc;
-      }
-    }, 0);
-    cartTotalElement.textContent = `$${total.toFixed(2)}`;
-  }
+  const total = cartItems.reduce((acc, item) => acc + item.subtotal, 0);
+  cartTotalElement.textContent = `$${total.toFixed(2)}`;
+}
 
 function updateCartItemQuantity(index, quantity) {
   console.log('Actualizando cantidad del elemento del carro:', index, quantity);
-  const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
-  cartItems[index].quantity = quantity;
-  cartItems[index].subtotal = cartItems[index].precio * quantity;
-  localStorage.setItem('cartItems', JSON.stringify(cartItems));
-  console.log('Datos del carro actualizados en el almacenamiento local:', cartItems);
-  renderCartItems(cartItems);
-  calculateCartTotal(cartItems);
+  
+  fetch('/carro/update_quantity/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCookie('csrftoken')
+    },
+    body: JSON.stringify({ index: index, quantity: quantity })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      renderCartItems(data.cart_items);
+      calculateCartTotal(data.cart_items);
+    } else {
+      console.error('Error al actualizar la cantidad:', data.error);
+    }
+  })
+  .catch(error => console.error('Error:', error));
 }
 
 function removeCartItem(index) {
   console.log('Eliminando elemento del carro:', index);
-  const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
-  cartItems.splice(index, 1);
-  localStorage.setItem('cartItems', JSON.stringify(cartItems));
-  console.log('Datos del carro actualizados en el almacenamiento local:', cartItems);
-  renderCartItems(cartItems);
-  calculateCartTotal(cartItems);
+  
+  fetch('/carro/remove_item/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCookie('csrftoken')
+    },
+    body: JSON.stringify({ index: index })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      renderCartItems(data.cart_items);
+      calculateCartTotal(data.cart_items);
+    } else {
+      console.error('Error al eliminar el elemento:', data.error);
+    }
+  })
+  .catch(error => console.error('Error:', error));
 }
 
 function updateCartItemCount() {
-  const cartItemCountElement = document.getElementById('cartItemCount');
-  cartItemCountElement.textContent = cartItems.length;
+  fetch('/carro/get_item_count/')
+    .then(response => response.json())
+    .then(data => {
+      cartItemCountElement.textContent = data.count;
+    })
+    .catch(error => console.error('Error:', error));
 }
-
 
 cartItemsContainer.addEventListener('change', (event) => {
   if (event.target.classList.contains('quantity')) {
@@ -85,9 +107,32 @@ cartItemsContainer.addEventListener('click', (event) => {
   }
 });
 
+// Función para obtener el token CSRF
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
 
+// Cargar los elementos del carro al iniciar la página
+function loadCartItems() {
+  fetch('/carro/get_items/')
+    .then(response => response.json())
+    .then(data => {
+      renderCartItems(data.cart_items);
+      calculateCartTotal(data.cart_items);
+    })
+    .catch(error => console.error('Error:', error));
+}
 
-// Obtener los elementos del carro del almacenamiento local al cargar la página
-const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
-renderCartItems(cartItems);
-calculateCartTotal(cartItems);
+// Cargar los elementos del carro al iniciar la página
+document.addEventListener('DOMContentLoaded', loadCartItems);

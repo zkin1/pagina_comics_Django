@@ -1,5 +1,4 @@
 let comics = [];
-let cartItems = [];
 const comicsContainer = $('#comics-list');
 
 // Función para renderizar los cómics
@@ -65,49 +64,38 @@ function renderComics(comicData) {
   }
 }
 
-
-// Función para agregar un producto al carro
+// Función para agregar un producto al carrito usando localStorage
 function addToCart(comic) {
-  const loggedInUser = localStorage.getItem('loggedInUser');
+  let cart = JSON.parse(localStorage.getItem('cart')) || {};
 
-  if (!loggedInUser) {
-    alert('Debes iniciar sesión para agregar productos al carro');
-    window.location.href = '{% url "login" %}';
-    return;
+  if (cart[comic.nombre]) {
+    cart[comic.nombre].quantity += 1;
   } else {
-    const existingItem = cartItems.find(item => item.nombre === comic.nombre);
+    cart[comic.nombre] = {
+      nombre: comic.nombre,
+      precio: comic.precio,
+      foto: comic.foto,
+      quantity: 1
+    };
+  }
 
-    if (existingItem) {
-      existingItem.quantity++;
-      existingItem.subtotal = existingItem.precio * existingItem.quantity;
-    } else {
-      const newItem = {
-        nombre: comic.nombre,
-        precio: comic.precio,
-        foto: comic.foto,
-        quantity: 1,
-        subtotal: comic.precio
-      };
-      cartItems.push(newItem);
-    }
+  localStorage.setItem('cart', JSON.stringify(cart));
+  updateCartItemCount();
+  alert('Producto agregado al carrito');
+}
 
-    localStorage.setItem('cartItems', JSON.stringify(cartItems));
-    updateCartItemCount();
-
-    $('#addToCartModal').modal('show');
+// Actualiza el conteo de artículos en el carrito
+function updateCartItemCount() {
+  let cart = JSON.parse(localStorage.getItem('cart')) || {};
+  let totalItems = Object.values(cart).reduce((total, item) => total + item.quantity, 0);
+  const cartItemCountElement = $('#cartItemCount');
+  if (cartItemCountElement.length) {
+    cartItemCountElement.text(totalItems);
   }
 }
 
-// Evento para agregar un producto al carro
+// Evento para agregar un producto al carrito
 comicsContainer.on('click', '.add-to-cart', function() {
-  const loggedInUser = localStorage.getItem('loggedInUser');
-
-  if (!loggedInUser) {
-    alert('Debes iniciar sesión para agregar productos al carro');
-    window.location.href = '{% url "login" %}';
-    return;
-  }
-
   const comicName = $(this).data('name');
   if (comicName) {
     const comic = comics.find(comic => comic.nombre === comicName);
@@ -120,6 +108,21 @@ comicsContainer.on('click', '.add-to-cart', function() {
     console.error('Invalid comic name');
   }
 });
+
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
 
 // Obtener los cómics de Django
 function fetchComics() {
@@ -138,7 +141,21 @@ function fetchComics() {
     });
 }
 
+// Función para ir al carrito
+function goToCart() {
+  window.location.href = '/carro/';
+}
+
 // Llamar a la función para obtener los cómics cuando se carga la página
 $(document).ready(function() {
   fetchComics();
+  
+  // Agregar evento al botón del carrito si existe
+  const cartButton = $('#cartButton');
+  if (cartButton.length) {
+    cartButton.on('click', goToCart);
+  }
+  
+  // Actualizar el conteo de artículos en el carrito cuando se carga la página
+  updateCartItemCount();
 });

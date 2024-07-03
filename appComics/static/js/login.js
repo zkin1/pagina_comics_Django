@@ -4,33 +4,38 @@ document.addEventListener('DOMContentLoaded', function() {
     if (loginForm) {
         loginForm.addEventListener('submit', (event) => {
             event.preventDefault();
-            const usuario = document.getElementById('usuario').value;
-            const contraseña = document.getElementById('contraseña').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
 
-            fetch('/login/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({ usuario: usuario, contraseña: contraseña })
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Respuesta del servidor:', data);
-                if (data.success) {
-                    console.log('Inicio de sesión exitoso, guardando en localStorage:', data.username);
-                    localStorage.setItem('loggedInUser', data.username);
-                    updateNavBar(data.username);
-                    window.location.href = '/';
-                } else {
-                    alert('Credenciales incorrectas');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error al iniciar sesión');
-            });
+            // Decide si enviar como JSON o como formulario
+            const useJson = false;  // Cambia a true si prefieres usar JSON
+
+            if (useJson) {
+                fetch('/login/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ usuario: username, contraseña: password })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        localStorage.setItem('loggedInUser', data.username);
+                        updateNavBar(data.username);
+                        window.location.href = '/';
+                    } else {
+                        alert('Credenciales incorrectas');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al iniciar sesión');
+                });
+            } else {
+                loginForm.submit();  // Envía el formulario normalmente
+            }
         });
     }
 
@@ -68,7 +73,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function checkLoginStatus() {
         fetch('/check-login-status/')
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error en la respuesta del servidor');
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.is_authenticated) {
                 updateNavBar(data.username);
@@ -78,6 +88,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => {
             console.error('Error al verificar el estado de inicio de sesión:', error);
+            updateNavBar(null); // Asume que no está autenticado en caso de error
         });
     }
 

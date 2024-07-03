@@ -1,5 +1,4 @@
 let comics = [];
-let cartItems = [];
 const comicsContainer = $('#comics-list');
 
 // Función para renderizar los cómics
@@ -8,7 +7,7 @@ function renderComics(comicData) {
 
   comicData.forEach((comic, index) => {
     // Ajustar la URL de la imagen
-    const comicImageUrl = `/static/img/${comic.foto}`;
+    const comicImageUrl = `/static${comic.foto}`;
 
     const comicCard = `
       <div class="col-md-4 mb-4">
@@ -40,7 +39,7 @@ function renderComics(comicData) {
                   <p><strong>Descripción:</strong> ${comic.descripcion}</p>
                   <p><strong>Precio:</strong> $${comic.precio}</p>
                   <p><strong>Stock:</strong> ${comic.stock}</p>
-                  <button type="button" class="btn btn-success add-to-cart" data-name="${comic.nombre}">Agregar al carrito</button>
+                  <button type="button" class="btn btn-success add-to-cart" data-id="${comic.id}">Agregar al carrito</button>
                 </div>
               </div>
             </div>
@@ -65,61 +64,70 @@ function renderComics(comicData) {
   }
 }
 
-
 // Función para agregar un producto al carro
 function addToCart(comic) {
   const loggedInUser = localStorage.getItem('loggedInUser');
 
   if (!loggedInUser) {
     alert('Debes iniciar sesión para agregar productos al carro');
-    window.location.href = '{% url "login" %}';
+    window.location.href = '/login/';
     return;
-  } else {
-    const existingItem = cartItems.find(item => item.nombre === comic.nombre);
-
-    if (existingItem) {
-      existingItem.quantity++;
-      existingItem.subtotal = existingItem.precio * existingItem.quantity;
-    } else {
-      const newItem = {
-        nombre: comic.nombre,
-        precio: comic.precio,
-        foto: comic.foto,
-        quantity: 1,
-        subtotal: comic.precio
-      };
-      cartItems.push(newItem);
-    }
-
-    localStorage.setItem('cartItems', JSON.stringify(cartItems));
-    updateCartItemCount();
-
-    $('#addToCartModal').modal('show');
   }
+
+  fetch('/carro/add_item/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCookie('csrftoken')
+    },
+    body: JSON.stringify({
+      id: comic.id
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      updateCartItemCount(data.total_items);
+      $('#addToCartModal').modal('show');
+    } else {
+      alert(data.error || 'Error al agregar al carro');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Error al agregar al carro');
+  });
 }
 
 // Evento para agregar un producto al carro
 comicsContainer.on('click', '.add-to-cart', function() {
-  const loggedInUser = localStorage.getItem('loggedInUser');
-
-  if (!loggedInUser) {
-    alert('Debes iniciar sesión para agregar productos al carro');
-    window.location.href = '{% url "login" %}';
-    return;
-  }
-
-  const comicName = $(this).data('name');
-  if (comicName) {
-    const comic = comics.find(comic => comic.nombre === comicName);
-    if (comic) {
-      addToCart(comic);
-    } else {
-      console.error('Comic not found with name:', comicName);
-    }
+  const comicId = $(this).data('id');
+  const comic = comics.find(c => c.id === comicId);
+  if (comic) {
+    addToCart(comic);
   } else {
-    console.error('Invalid comic name');
+    console.error('Comic not found with id:', comicId);
   }
 });
+
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+function updateCartItemCount(count) {
+  $('#cartItemCount').text(count);
+}
 
 // Obtener los cómics de Django
 function fetchComics() {
