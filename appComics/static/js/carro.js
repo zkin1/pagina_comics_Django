@@ -22,7 +22,7 @@ function renderCartItems(cartItems) {
         </td>
         <td>$${item.subtotal.toFixed(2)}</td>
         <td>
-          <button type="button" class="btn btn-danger btn-sm remove-item" data-name="${item.nombre}">X</button>
+          <button type="button" class="btn btn-danger btn-sm remove-item" data-name="${item.nombre}">Eliminar</button>
         </td>
       `;
       cartItemsContainer.appendChild(row);
@@ -98,7 +98,7 @@ function removeCartItem(nombre) {
 }
 
 function updateCartItemCount() {
-  fetch('//')
+  fetch('/carro/count/')
     .then(response => {
       if (!response.ok) {
         throw new Error('Network response was not ok');
@@ -133,7 +133,7 @@ function getCookie(name) {
 
 // Cargar los elementos del carro al iniciar la página
 function loadCartItems() {
-  fetch("/productos/get_comics/")
+  fetch("/carro/get_items/")
     .then(response => {
       if (!response.ok) {
         throw new Error('Network response was not ok');
@@ -141,16 +141,9 @@ function loadCartItems() {
       return response.json();
     })
     .then(data => {
-      if (Array.isArray(data)) {
-        const cartItems = data.map(item => ({
-          foto: item.foto,
-          nombre: item.nombre,
-          precio: item.precio,
-          quantity: 1,
-          subtotal: item.precio
-        }));
-        renderCartItems(cartItems);
-        calculateCartTotal(cartItems);
+      if (data.cart_items && Array.isArray(data.cart_items)) {
+        renderCartItems(data.cart_items);
+        calculateCartTotal(data.cart_items);
       } else {
         console.error('Unexpected data format:', data);
         // Muestra un mensaje de error al usuario

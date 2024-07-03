@@ -39,7 +39,7 @@ function renderComics(comicData) {
                   <p><strong>Descripción:</strong> ${comic.descripcion}</p>
                   <p><strong>Precio:</strong> $${comic.precio}</p>
                   <p><strong>Stock:</strong> ${comic.stock}</p>
-                  <button type="button" class="btn btn-success add-to-cart" data-name="${comic.nombre}">Agregar al carrito</button>
+                  <button type="button" class="btn btn-success add-to-cart" data-comic-id="${comic.id}">Agregar al carrito</button>
                 </div>
               </div>
             </div>
@@ -64,46 +64,72 @@ function renderComics(comicData) {
   }
 }
 
-// Función para agregar un producto al carrito usando localStorage
-function addToCart(comic) {
-  let cart = JSON.parse(localStorage.getItem('cart')) || {};
-
-  if (cart[comic.nombre]) {
-    cart[comic.nombre].quantity += 1;
-  } else {
-    cart[comic.nombre] = {
-      nombre: comic.nombre,
-      precio: comic.precio,
-      foto: comic.foto,
-      quantity: 1
-    };
-  }
-
-  localStorage.setItem('cart', JSON.stringify(cart));
-  updateCartItemCount();
-  alert('Producto agregado al carrito');
+// Función para agregar un producto al carrito
+function addToCart(comicName, quantity) {
+  fetch('/carro/add_item/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCookie('csrftoken')
+    },
+    body: JSON.stringify({ comicName: comicName, quantity: quantity })
+  })
+  .then(response => {
+    if (response.ok) {
+      // Actualizar el conteo de artículos en el carrito
+      updateCartItemCount();
+      
+      // Mostrar ventana de confirmación con SweetAlert
+      Swal.fire({
+        title: '¡Producto agregado al carrito!',
+        icon: 'success',
+        showCancelButton: true,
+        confirmButtonText: 'Ir al carrito',
+        cancelButtonText: 'Seguir comprando',
+        reverseButtons: true
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Redirigir al carrito si se hace clic en "Ir al carrito"
+          window.location.href = '/carro/';
+        }
+      });
+    } else {
+      console.error('Error al agregar el producto al carrito');
+    }
+  })
+  .catch(error => {
+    console.error('Error al agregar el producto al carrito:', error);
+  });
 }
 
 // Actualiza el conteo de artículos en el carrito
 function updateCartItemCount() {
-  let cart = JSON.parse(localStorage.getItem('cart')) || {};
-  let totalItems = Object.values(cart).reduce((total, item) => total + item.quantity, 0);
-  const cartItemCountElement = $('#cartItemCount');
-  if (cartItemCountElement.length) {
-    cartItemCountElement.text(totalItems);
-  }
+  fetch('/carro/count/')
+    .then(response => {
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw new Error('Error al obtener el conteo de artículos del carrito');
+      }
+    })
+    .then(data => {
+      const cartItemCountElement = $('#cartItemCount');
+      if (cartItemCountElement.length) {
+        cartItemCountElement.text(data.count);
+      }
+    })
+    .catch(error => {
+      console.error('Error al actualizar el conteo de artículos del carrito:', error);
+    });
 }
 
 // Evento para agregar un producto al carrito
 comicsContainer.on('click', '.add-to-cart', function() {
-  const comicName = $(this).data('name');
+  const comicModal = $(this).closest('.modal');
+  const comicName = comicModal.find('.modal-title').text();
+  const quantity = 1; // Puedes ajustar la cantidad según tus necesidades
   if (comicName) {
-    const comic = comics.find(comic => comic.nombre === comicName);
-    if (comic) {
-      addToCart(comic);
-    } else {
-      console.error('Comic not found with name:', comicName);
-    }
+    addToCart(comicName, quantity);
   } else {
     console.error('Invalid comic name');
   }

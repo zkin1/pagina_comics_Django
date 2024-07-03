@@ -17,30 +17,33 @@ import json
 def add_to_cart(request):
     try:
         data = json.loads(request.body)
-        nombre = data.get('nombre')
-        precio = data.get('precio')
-        foto = data.get('foto')
+        comic_name = data.get('comicName')
         quantity = data.get('quantity', 1)  # Añadido: Tomar quantity del request o usar 1 por defecto
         
-        if not all([nombre, precio, foto]):
+        if not comic_name:
             return JsonResponse({'success': False, 'error': 'Datos incompletos'}, status=400)
+        
+        try:
+            comic = Comic.objects.get(nombre=comic_name)
+        except Comic.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Comic no encontrado'}, status=404)
         
         cart = request.session.get('cart', {})
         
         # Verificación adicional y logs
         print(f"Cart antes de la adición: {cart}")
         
-        if nombre in cart:
+        if comic_name in cart:
             # Aumentar la cantidad si el item ya está en el carrito
-            if 'quantity' in cart[nombre]:
-                cart[nombre]['quantity'] += quantity  # Sumamos la cantidad enviada
+            if 'quantity' in cart[comic_name]:
+                cart[comic_name]['quantity'] += quantity  # Sumamos la cantidad enviada
             else:
-                cart[nombre]['quantity'] = quantity  # Inicializamos la cantidad si no está presente
+                cart[comic_name]['quantity'] = quantity  # Inicializamos la cantidad si no está presente
         else:
             # Añadir nuevo item con cantidad inicial
-            cart[nombre] = {
-                'precio': float(precio),
-                'foto': foto,
+            cart[comic_name] = {
+                'precio': float(comic.precio),
+                'foto': comic.foto.url,
                 'quantity': quantity  # Usamos la cantidad enviada o por defecto 1
             }
         
@@ -73,7 +76,6 @@ def productos(request):
 def get_comics(request):
     comics = Comic.objects.all()
     data = [{
-        'id': comic.id,
         'nombre': comic.nombre,
         'precio': float(comic.precio),
         'foto': comic.foto.url,
@@ -174,6 +176,12 @@ def get_cart_items(request):
             'subtotal': item['precio'] * item['quantity']
         })
     return JsonResponse({'cart_items': cart_items})
+
+
+def get_cart_item_count(request):
+    cart = request.session.get('cart', {})
+    count = sum(item['quantity'] for item in cart.values())
+    return JsonResponse({'count': count})
 
 
 @ensure_csrf_cookie
