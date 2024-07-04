@@ -68,6 +68,43 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function addToCart(comic, quantity = 1) {
+        if (comic.stock <= 0) {
+            Swal.fire('Sin stock', 'Lo sentimos, este cómic no tiene stock disponible', 'warning');
+            return;
+        }
+
+        fetch('/check-login-status/')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.is_authenticated) {
+                    addToCartRequest(comic, quantity);
+                } else {
+                    Swal.fire({
+                        title: 'Inicio de sesión requerido',
+                        text: 'Debes iniciar sesión para agregar productos al carrito',
+                        icon: 'info',
+                        showCancelButton: true,
+                        confirmButtonText: 'Ir a iniciar sesión',
+                        cancelButtonText: 'Cancelar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '/login/';
+                        }
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error al verificar el estado de login:', error);
+                Swal.fire('Error', 'Hubo un problema al verificar tu sesión', 'error');
+            });
+    }
+
+    function addToCartRequest(comic, quantity) {
         fetch('/carro/add_item/', {
             method: 'POST',
             headers: {
@@ -152,7 +189,6 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(response => response.json())
         .then(allComics => {
             comics = allComics; // Guardar todos los cómics
-            renderCarousel(allComics);
         })
         .catch(error => console.error('Error al obtener los cómics para el carrusel:', error));
 });

@@ -99,73 +99,44 @@ function showComicModal(comic) {
     // Mostrar el modal
     $(`#${modalId}`).modal('show');
 
-    function addToCart(comicName) {
-        console.log('Comic Name:', comicName);
-        
-        fetch('/carro/add_item/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
-            },
-            body: JSON.stringify({ comicName: comicName, quantity: 1 })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Error en la solicitud POST: ' + response.status);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                updateCartItemCount();
-                Swal.fire({
-                    title: '¡Producto agregado al carrito!',
-                    icon: 'success',
-                    showCancelButton: true,
-                    confirmButtonText: 'Ir al carrito',
-                    cancelButtonText: 'Seguir comprando',
-                    reverseButtons: true
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = '/carro/';
-                    }
-                });
-            } else {
-                Swal.fire('Error', data.error, 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error al agregar el producto al carrito:', error);
-            Swal.fire('Error', 'Hubo un problema al agregar el producto al carrito', 'error');
-        });
-    }
-
-
-// Manejar el evento de agregar al carrito
-$(`#${modalId} .add-to-cart`).on('click', function() {
-    const comicName = $(this).data('comic-name');
-    if (comicName) {
-        addToCart(comicName);
-    } else {
-        console.error('No se encontró el nombre del cómic');
-    }
-});
-
-// Evento para agregar un producto al carrito desde el modal
-$('body').on('click', '.modal .add-to-cart', function() {
-    const comicName = $(this).closest('.modal').find('.modal-title').text();
-    addToCart(comicName);
-});
-}
     // Manejar el evento de agregar al carrito
     $(`#${modalId} .add-to-cart`).on('click', function() {
         const comicData = JSON.parse($(this).attr('data-comic'));
-        addToCart(comicData, 1); // Puedes ajustar la cantidad aquí si es necesario
+        addToCart(comicData, 1);
     });
+}
 
-// Función para agregar un producto al carrito
 function addToCart(comic, quantity = 1) {
+    fetch('/check-login-status/')  // Asegúrese de que esta URL coincida con la de su urls.py
+        .then(response => response.json())
+        .then(data => {
+            if (data.is_authenticated) {
+                // El usuario está autenticado, proceder a agregar al carrito
+                addToCartRequest(comic, quantity);
+            } else {
+                // El usuario no está autenticado, mostrar mensaje
+                Swal.fire({
+                    title: 'Inicio de sesión requerido',
+                    text: 'Debes iniciar sesión para agregar productos al carrito',
+                    icon: 'info',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ir a iniciar sesión',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '/login/';
+                    }
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error al verificar el estado de login:', error);
+            Swal.fire('Error', 'Hubo un problema al verificar tu sesión', 'error');
+        });
+}
+
+function addToCartRequest(comic, quantity) {
+    // Este es su código actual para agregar al carrito
     fetch('/carro/add_item/', {
         method: 'POST',
         headers: {
@@ -175,7 +146,6 @@ function addToCart(comic, quantity = 1) {
         body: JSON.stringify({ comicName: comic.nombre, quantity: quantity })
     })
     .then(response => {
-        // Revisar si la respuesta no es JSON
         if (!response.ok) {
             return response.text().then(text => {
                 throw new Error(`Error: ${response.status} ${response.statusText} - ${text}`);
@@ -208,6 +178,51 @@ function addToCart(comic, quantity = 1) {
     });
 }
 
+
+function addToCartRequest(comic, quantity) {
+    fetch('/carro/add_item/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ comicName: comic.nombre, quantity: quantity })
+    })
+    .then(response => {
+        console.log('Respuesta de add_item:', response);
+        if (!response.ok) {
+            return response.text().then(text => {
+                throw new Error(`Error: ${response.status} ${response.statusText} - ${text}`);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Datos de add_item:', data);
+        if (data.success) {
+            updateCartItemCount(data.total_items);
+            Swal.fire({
+                title: '¡Producto agregado al carrito!',
+                icon: 'success',
+                showCancelButton: true,
+                confirmButtonText: 'Ir al carrito',
+                cancelButtonText: 'Seguir comprando',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '/carro/';
+                }
+            });
+        } else {
+            Swal.fire('Error', data.error, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error al agregar el producto al carrito:', error);
+        Swal.fire('Error', 'Hubo un problema al agregar el producto al carrito', 'error');
+    });
+}
+
 // Función para obtener la cookie CSRF
 function getCookie(name) {
     let cookieValue = null;
@@ -215,7 +230,6 @@ function getCookie(name) {
         const cookies = document.cookie.split(';');
         for (let i = 0; i < cookies.length; i++) {
             const cookie = cookies[i].trim();
-            // Does this cookie string begin with the name we want?
             if (cookie.substring(0, name.length + 1) === (name + '=')) {
                 cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                 break;
@@ -232,4 +246,3 @@ function updateCartItemCount(totalItems) {
         cartItemCount.textContent = totalItems;
     }
 }
-

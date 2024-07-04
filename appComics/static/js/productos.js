@@ -65,45 +65,76 @@ function renderComics(comicData) {
 }
 
 // Función para agregar un producto al carrito
-function addToCart(comicName, quantity) {
-  const comic = comics.find(comic => comic.nombre === comicName);
-  
-  if (comic) {
-    fetch('/carro/add_item/', {
+function addToCart(comic, quantity = 1) {
+  fetch('/check-login-status/')  // Asegúrese de que esta URL coincida con la de su urls.py
+      .then(response => response.json())
+      .then(data => {
+          if (data.is_authenticated) {
+              // El usuario está autenticado, proceder a agregar al carrito
+              addToCartRequest(comic, quantity);
+          } else {
+              // El usuario no está autenticado, mostrar mensaje
+              Swal.fire({
+                  title: 'Inicio de sesión requerido',
+                  text: 'Debes iniciar sesión para agregar productos al carrito',
+                  icon: 'info',
+                  showCancelButton: true,
+                  confirmButtonText: 'Ir a iniciar sesión',
+                  cancelButtonText: 'Cancelar'
+              }).then((result) => {
+                  if (result.isConfirmed) {
+                      window.location.href = '/login/';
+                  }
+              });
+          }
+      })
+      .catch(error => {
+          console.error('Error al verificar el estado de login:', error);
+          Swal.fire('Error', 'Hubo un problema al verificar tu sesión', 'error');
+      });
+}
+
+function addToCartRequest(comic, quantity) {
+  // Este es su código actual para agregar al carrito
+  fetch('/carro/add_item/', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': getCookie('csrftoken')
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken')
       },
-      body: JSON.stringify({ comicName: comicName, quantity: quantity })
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        updateCartItemCount();
-        Swal.fire({
-          title: '¡Producto agregado al carrito!',
-          icon: 'success',
-          showCancelButton: true,
-          confirmButtonText: 'Ir al carrito',
-          cancelButtonText: 'Seguir comprando',
-          reverseButtons: true
-        }).then((result) => {
-          if (result.isConfirmed) {
-            window.location.href = '/carro/';
-          }
-        });
-      } else {
-        Swal.fire('Error', data.error, 'error');
+      body: JSON.stringify({ comicName: comic.nombre, quantity: quantity })
+  })
+  .then(response => {
+      if (!response.ok) {
+          return response.text().then(text => {
+              throw new Error(`Error: ${response.status} ${response.statusText} - ${text}`);
+          });
       }
-    })
-    .catch(error => {
+      return response.json();
+  })
+  .then(data => {
+      if (data.success) {
+          updateCartItemCount(data.total_items);
+          Swal.fire({
+              title: '¡Producto agregado al carrito!',
+              icon: 'success',
+              showCancelButton: true,
+              confirmButtonText: 'Ir al carrito',
+              cancelButtonText: 'Seguir comprando',
+              reverseButtons: true
+          }).then((result) => {
+              if (result.isConfirmed) {
+                  window.location.href = '/carro/';
+              }
+          });
+      } else {
+          Swal.fire('Error', data.error, 'error');
+      }
+  })
+  .catch(error => {
       console.error('Error al agregar el producto al carrito:', error);
       Swal.fire('Error', 'Hubo un problema al agregar el producto al carrito', 'error');
-    });
-  } else {
-    Swal.fire('Error', 'Producto no encontrado', 'error');
-  }
+  });
 }
 
 // Actualiza el conteo de artículos en el carrito
