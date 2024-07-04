@@ -1,31 +1,22 @@
 let getComicsUrl;
-let comics = []; // Declarar la variable 'comics' fuera de la función de renderizado
+let comics = [];
 
 document.addEventListener('DOMContentLoaded', function () {
-    // Obtener la URL de la vista desde el meta tag
     getComicsUrl = document.querySelector('meta[name="get-comics-url"]').getAttribute('content');
 
     function filterComics(comics, searchTerm) {
         return comics.filter(comic => {
             const name = comic.nombre.toLowerCase();
-            const description = comic.descripcion.toLowerCase();
             const term = searchTerm.toLowerCase();
-            return name.includes(term) || description.includes(term);
+            return name.includes(term);
         });
     }
 
-    // Función para renderizar los cómics
-    function renderComics(comicData, filteredComics, searchTerm) {
+    function renderComics(comicData, searchTerm) {
         const filteredComicsContainer = $('#filtered-comics-list');
-        const allComicsContainer = $('#all-comics-list');
-
         filteredComicsContainer.empty();
-        allComicsContainer.empty();
 
-        const comicsToRender = searchTerm ? filteredComics : comicData;
-
-        comicsToRender.forEach((comic, index) => {
-            // Ajustar la URL de la imagen
+        comicData.forEach((comic, index) => {
             const comicImageUrl = `/static${comic.foto}`;
         
             const comicCard = `
@@ -39,7 +30,6 @@ document.addEventListener('DOMContentLoaded', function () {
                   </div>
                 </div>
               </div>
-              <!-- Modal -->
               <div class="modal fade" id="comicModal${index}" tabindex="-1" role="dialog" aria-labelledby="comicModalLabel${index}" aria-hidden="true">
                 <div class="modal-dialog modal-lg" role="document">
                   <div class="modal-content">
@@ -67,26 +57,17 @@ document.addEventListener('DOMContentLoaded', function () {
               </div>
             `;
 
-            if (searchTerm) {
-                filteredComicsContainer.append(comicCard);
-            } else {
-                allComicsContainer.append(comicCard);
-            }
+            filteredComicsContainer.append(comicCard);
         });
 
-        comics = comicData; // Asignar los datos de los cómics a la variable 'comics'
-
-        // Manejar el evento de agregar al carrito
         $('.add-to-cart').on('click', function() {
             const comicName = $(this).data('name');
             const comic = comics.find(c => c.nombre === comicName);
-            addToCart(comic, 1); // Puedes ajustar la cantidad aquí si es necesario
+            addToCart(comic, 1);
         });
     }
 
-    // Función para agregar un producto al carrito
     function addToCart(comic, quantity = 1) {
-        console.log('Agregando al carrito:', comic.nombre, quantity); // Añadir mensaje de depuración
         fetch('/carro/add_item/', {
             method: 'POST',
             headers: {
@@ -96,7 +77,6 @@ document.addEventListener('DOMContentLoaded', function () {
             body: JSON.stringify({ comicName: comic.nombre, quantity: quantity })
         })
         .then(response => {
-            // Revisar si la respuesta no es JSON
             if (!response.ok) {
                 return response.text().then(text => {
                     throw new Error(`Error: ${response.status} ${response.statusText} - ${text}`);
@@ -129,14 +109,12 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Función para obtener la cookie CSRF
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
             const cookies = document.cookie.split(';');
             for (let i = 0; i < cookies.length; i++) {
                 const cookie = cookies[i].trim();
-                // Does this cookie string begin with the name we want?
                 if (cookie.substring(0, name.length + 1) === (name + '=')) {
                     cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                     break;
@@ -146,7 +124,6 @@ document.addEventListener('DOMContentLoaded', function () {
         return cookieValue;
     }
 
-    // Función para actualizar el contador de items en el carrito
     function updateCartItemCount(totalItems) {
         const cartItemCount = document.getElementById('cartItemCount');
         if (cartItemCount) {
@@ -154,23 +131,73 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Event listener para el botón de búsqueda
     $('#search-btn').on('click', function () {
         const searchTerm = $('#search-input').val().trim();
-        fetch(getComicsUrl) // Usar la URL obtenida del meta tag
-            .then(response => response.json())
-            .then(comics => {
-                const filteredComics = filterComics(comics, searchTerm);
-                renderComics(comics, filteredComics, searchTerm);
-            })
-            .catch(error => console.error('Error al obtener los cómics:', error));
+        if (searchTerm) {
+            fetch(getComicsUrl)
+                .then(response => response.json())
+                .then(allComics => {
+                    comics = allComics; // Guardar todos los cómics
+                    const filteredComics = filterComics(allComics, searchTerm);
+                    renderComics(filteredComics, searchTerm);
+                })
+                .catch(error => console.error('Error al obtener los cómics:', error));
+        } else {
+            $('#filtered-comics-list').empty(); // Limpiar resultados si no hay término de búsqueda
+        }
     });
 
-    // Cargar todos los cómics al inicio
+    // Cargar el carrusel al inicio
     fetch(getComicsUrl)
         .then(response => response.json())
-        .then(comics => {
-            renderComics(comics, [], '');
+        .then(allComics => {
+            comics = allComics; // Guardar todos los cómics
+            renderCarousel(allComics);
         })
-        .catch(error => console.error('Error al obtener los cómics:', error));
+        .catch(error => console.error('Error al obtener los cómics para el carrusel:', error));
 });
+
+function showComicModal(comic) {
+    const modalId = 'comicModal';
+    const modalHtml = `
+        <div class="modal fade" id="${modalId}" tabindex="-1" role="dialog" aria-labelledby="${modalId}Label" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="${modalId}Label">${comic.nombre}</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <img src="/static${comic.foto}" class="img-fluid" alt="${comic.nombre}">
+                            </div>
+                            <div class="col-md-8">
+                                <p><strong>Descripción:</strong> ${comic.descripcion}</p>
+                                <p><strong>Precio:</strong> $${comic.precio}</p>
+                                <p><strong>Stock:</strong> ${comic.stock}</p>
+                                <button type="button" class="btn btn-success add-to-cart" data-comic='${JSON.stringify(comic)}'>Agregar al carrito</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    const existingModal = document.getElementById(modalId);
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    $(`#${modalId}`).modal('show');
+
+    $(`#${modalId} .add-to-cart`).on('click', function() {
+        const comicData = JSON.parse($(this).attr('data-comic'));
+        addToCart(comicData, 1);
+    });
+}

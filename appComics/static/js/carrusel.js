@@ -99,12 +99,70 @@ function showComicModal(comic) {
     // Mostrar el modal
     $(`#${modalId}`).modal('show');
 
+    function addToCart(comicName) {
+        console.log('Comic Name:', comicName);
+        
+        fetch('/carro/add_item/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ comicName: comicName, quantity: 1 })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error en la solicitud POST: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                updateCartItemCount();
+                Swal.fire({
+                    title: '¡Producto agregado al carrito!',
+                    icon: 'success',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ir al carrito',
+                    cancelButtonText: 'Seguir comprando',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '/carro/';
+                    }
+                });
+            } else {
+                Swal.fire('Error', data.error, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error al agregar el producto al carrito:', error);
+            Swal.fire('Error', 'Hubo un problema al agregar el producto al carrito', 'error');
+        });
+    }
+
+
+// Manejar el evento de agregar al carrito
+$(`#${modalId} .add-to-cart`).on('click', function() {
+    const comicName = $(this).data('comic-name');
+    if (comicName) {
+        addToCart(comicName);
+    } else {
+        console.error('No se encontró el nombre del cómic');
+    }
+});
+
+// Evento para agregar un producto al carrito desde el modal
+$('body').on('click', '.modal .add-to-cart', function() {
+    const comicName = $(this).closest('.modal').find('.modal-title').text();
+    addToCart(comicName);
+});
+}
     // Manejar el evento de agregar al carrito
     $(`#${modalId} .add-to-cart`).on('click', function() {
         const comicData = JSON.parse($(this).attr('data-comic'));
         addToCart(comicData, 1); // Puedes ajustar la cantidad aquí si es necesario
     });
-}
 
 // Función para agregar un producto al carrito
 function addToCart(comic, quantity = 1) {
@@ -174,3 +232,4 @@ function updateCartItemCount(totalItems) {
         cartItemCount.textContent = totalItems;
     }
 }
+
