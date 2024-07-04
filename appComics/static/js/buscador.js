@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const comicsToRender = searchTerm ? filteredComics : comicData;
 
-        comicData.forEach((comic, index) => {
+        comicsToRender.forEach((comic, index) => {
             // Ajustar la URL de la imagen
             const comicImageUrl = `/static${comic.foto}`;
         
@@ -165,4 +165,12 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .catch(error => console.error('Error al obtener los cómics:', error));
     });
+
+    // Cargar todos los cómics al inicio
+    fetch(getComicsUrl)
+        .then(response => response.json())
+        .then(comics => {
+            renderComics(comics, [], '');
+        })
+        .catch(error => console.error('Error al obtener los cómics:', error));
 });
