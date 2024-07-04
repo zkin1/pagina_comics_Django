@@ -21,7 +21,7 @@ function renderCartItems(cartItems) {
         <td>
           <input type="number" class="form-control quantity" value="${item.quantity}" min="1" max="${item.stock}" data-name="${item.nombre}">
         </td>
-        <td>$${item.subtotal.toFixed(2)}</td>
+        <td>$${Math.round(item.subtotal)}</td>
         <td>
           <button type="button" class="btn btn-danger btn-sm remove-item" data-name="${item.nombre}">Eliminar</button>
         </td>
@@ -38,7 +38,7 @@ function renderCartItems(cartItems) {
 function calculateCartTotal(cartItems) {
   const total = cartItems.reduce((acc, item) => acc + item.subtotal, 0);
   if (cartTotalElement) {
-    cartTotalElement.textContent = `$${total.toFixed(2)}`;
+    cartTotalElement.textContent = `$${Math.round(total)}`;
   }
 }
 

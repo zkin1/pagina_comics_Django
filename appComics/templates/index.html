@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="{% static 'css/carrusel.css' %}">
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.css">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
   <meta name="get-comics-url" content="{% url 'get_comics' %}">   
@@ -16,7 +17,7 @@
 <body>
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container">
-      <a class="navbar-brand" href="#">Comics Sharingann</a>
+      <a class="navbar-brand" href="{% url 'index' %}">Comics Sharingann</a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -143,7 +144,7 @@
         </div>
         <div class="col-md-4">
           <h5>Contacto</h5>
-          <p>Correo: comic.sharingann@gmail.com</p>
+          <p>Correo: comicssharingann@gmail.com</p>
           <p>Teléfono: +56 9 6618 9340</p>
         </div>
         <div class="col-md-4">
@@ -158,6 +159,8 @@
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
   <script src="https://kit.fontawesome.com/actual-kit-id.js" crossorigin="anonymous"></script>
   <script src="{% static 'js/buscador.js' %}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
   <script src="{% static 'js/carrusel.js' %}"></script>
   <script src="{% static 'js/carro.js' %}"></script>
   <script src="{% static 'js/login.js' %}"></script>

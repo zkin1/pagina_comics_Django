@@ -67,8 +67,6 @@ document.addEventListener('DOMContentLoaded', function () {
               </div>
             `;
 
-          comics = comicData;
-
             if (searchTerm) {
                 filteredComicsContainer.append(comicCard);
             } else {
@@ -77,10 +75,84 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         comics = comicData; // Asignar los datos de los cómics a la variable 'comics'
+
+        // Manejar el evento de agregar al carrito
+        $('.add-to-cart').on('click', function() {
+            const comicName = $(this).data('name');
+            const comic = comics.find(c => c.nombre === comicName);
+            addToCart(comic, 1); // Puedes ajustar la cantidad aquí si es necesario
+        });
     }
 
-    // Función para agregar un producto al carro (igual que antes)
-    // ...
+    // Función para agregar un producto al carrito
+    function addToCart(comic, quantity = 1) {
+        console.log('Agregando al carrito:', comic.nombre, quantity); // Añadir mensaje de depuración
+        fetch('/carro/add_item/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ comicName: comic.nombre, quantity: quantity })
+        })
+        .then(response => {
+            // Revisar si la respuesta no es JSON
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(`Error: ${response.status} ${response.statusText} - ${text}`);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                updateCartItemCount(data.total_items);
+                Swal.fire({
+                    title: '¡Producto agregado al carrito!',
+                    icon: 'success',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ir al carrito',
+                    cancelButtonText: 'Seguir comprando',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '/carro/';
+                    }
+                });
+            } else {
+                Swal.fire('Error', data.error, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error al agregar el producto al carrito:', error);
+            Swal.fire('Error', 'Hubo un problema al agregar el producto al carrito', 'error');
+        });
+    }
+
+    // Función para obtener la cookie CSRF
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Función para actualizar el contador de items en el carrito
+    function updateCartItemCount(totalItems) {
+        const cartItemCount = document.getElementById('cartItemCount');
+        if (cartItemCount) {
+            cartItemCount.textContent = totalItems;
+        }
+    }
 
     // Event listener para el botón de búsqueda
     $('#search-btn').on('click', function () {
