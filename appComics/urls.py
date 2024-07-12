@@ -3,6 +3,8 @@ from . import views
 from .views import remove_cart_item
 from .views import update_cart_item_quantity
 from .views import get_cart_item_count
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('', views.index, name='index'),
@@ -22,3 +24,6 @@ urlpatterns = [
     path('submit_envio/', views.submit_envio, name='submit_envio'),
     path('carro/get_item_count/', views.get_item_count, name='get_item_count')
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

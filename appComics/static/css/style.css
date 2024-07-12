@@ -1,51 +1,140 @@
 .titulo {
-    text-align: center;
-  }
-  
-  h1 {
-    color: whitesmoke !important; 
-  }
-  
-  body {
-    background-image: url(../img/fondo1.jpg);
-  }
-  
-  .navbar {
-    background-image: url(../img/fondo1.jpg);
-  }
-  
-  .navbar.navbar-light .navbar-brand,
-  .navbar.navbar-light .navbar-nav .nav-link {
-    color: whitesmoke !important;
-  }
+  text-align: center;
+}
 
-  h2{
-    color: whitesmoke !important;
-  }
-  
-  .btn-custom {
-    background-color: #ff0000;
-    color: #ffffff; 
-  }
-  footer.footer {
-    margin-top: 50px;
-    background-image: url(../img/fondo1.jpg);
-  }
-  
-  footer.footer h5 {
-    font-weight: bold;
-    margin-bottom: 1rem;
-  }
-  
-  footer.footer ul.list-unstyled li {
-    margin-bottom: 0.5rem;
-  }
-  
-  footer.footer ul.list-unstyled li a {
-    text-decoration: none;
-    transition: color 0.3s ease;
-  }
-  
-  footer.footer ul.list-unstyled li a:hover {
-    color: #ccc;
-  }
+body {
+  background-image: url(../img/fondo1.jpg);
+  color: whitesmoke;
+}
+
+h1, h2, p, .card-title, .card-text {
+  color: whitesmoke !important; 
+}
+
+.navbar {
+  background-image: url(../img/fondo1.jpg);
+}
+
+.navbar.navbar-light .navbar-brand,
+.navbar.navbar-light .navbar-nav .nav-link {
+  color: whitesmoke !important;
+}
+
+.btn-custom {
+  background-color: #ff0000;
+  color: #ffffff; 
+}
+
+footer.footer {
+  margin-top: 50px;
+  background-image: url(../img/fondo1.jpg);
+}
+
+footer.footer h5 {
+  font-weight: bold;
+  margin-bottom: 1rem;
+  color: whitesmoke;
+}
+
+footer.footer ul.list-unstyled li {
+  margin-bottom: 0.5rem;
+}
+
+footer.footer ul.list-unstyled li a {
+  color: whitesmoke;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+footer.footer ul.list-unstyled li a:hover {
+  color: #ccc;
+}
+
+/* Estilos para la página de productos */
+.card {
+  background-color: rgba(0, 0, 0, 0.5);
+  margin-bottom: 20px;
+}
+
+.card-body h5,
+.card-body p {
+  color: whitesmoke !important;
+}
+
+.table {
+  color: whitesmoke !important;
+}
+
+.pagination .page-link {
+  background-color: rgba(0, 0, 0, 0.5);
+  border-color: whitesmoke;
+  color: whitesmoke;
+}
+
+.pagination .page-item.active .page-link {
+  background-color: whitesmoke;
+  color: black;
+}
+
+.pagination .page-item.disabled .page-link {
+  background-color: rgba(0, 0, 0, 0.5);
+  color: #6c757d;
+}
+
+/* Estilos para el modal */
+.modal-content {
+  background-color: white;
+  color: black;
+}
+
+.modal-content h5,
+.modal-content p,
+.modal-body strong {
+  color: black !important;
+}
+
+.modal-header {
+  border-bottom: 1px solid #dee2e6;
+}
+
+.modal-footer {
+  border-top: 1px solid #dee2e6;
+}
+
+/* Estilos para los botones */
+.btn-primary, .btn-secondary, .btn-success, .btn-danger, .btn-warning {
+  color: white !important;
+}
+
+/* Estilos para los formularios */
+.form-control {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: whitesmoke;
+  border-color: whitesmoke;
+}
+
+.form-control:focus {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: whitesmoke;
+}
+
+/* Estilos para mensajes de error o éxito */
+.alert {
+  background-color: rgba(0, 0, 0, 0.5);
+  color: whitesmoke;
+}
+
+/* Estilos para el carrito */
+#cartItemCount {
+  background-color: red;
+  color: white;
+}
+
+/* Asegurar que los enlaces sean visibles */
+a {
+  color: #17a2b8;
+}
+
+a:hover {
+  color: #138496;
+}

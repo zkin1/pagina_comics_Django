@@ -1,25 +1,21 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_POST, require_http_methods
-from django.views.decorators.http import require_GET
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.views.decorators.http import require_POST, require_http_methods, require_GET
 from django.http import JsonResponse
 from django.contrib.auth.models import User
 from django.contrib import messages
-from django.views.decorators.csrf import ensure_csrf_cookie
-from .models import Comic, UsuarioComic
-from django import forms
-import json
-from django.db.models import Sum
-from .models import Comic, CarritoItem
-from django.views.decorators.csrf import csrf_exempt
-from .models import Pedido
-import traceback
-import logging
+from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
+from django.core.paginator import Paginator
+from django.db.models import Q, Sum
 from django.core.mail import send_mail
 from django.conf import settings
-from .models import Comic, CarritoItem, Pedido, DetallesPedido
+from .models import Comic, UsuarioComic, CarritoItem, Pedido, DetallesPedido
+from .forms import ComicForm, CustomUserCreationForm
+import json
+import traceback
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -36,14 +32,12 @@ def add_to_cart(request):
         
         comic = get_object_or_404(Comic, nombre=comic_name)
         
-        # Obtener o crear el item del carrito
         cart_item, created = CarritoItem.objects.get_or_create(
             usuario=request.user,
             comic=comic,
             defaults={'cantidad': 0}
         )
         
-        # Actualizar la cantidad
         new_quantity = cart_item.cantidad + quantity
         if new_quantity > comic.stock:
             return JsonResponse({'success': False, 'error': 'Stock insuficiente'}, status=400)
@@ -51,10 +45,9 @@ def add_to_cart(request):
         cart_item.cantidad = new_quantity
         cart_item.save()
         
-        # Actualizar la sesión del carrito
         cart = request.session.get('cart', {})
         cart[comic_name] = {
-            'precio': float(comic.precio),
+            'precio': int(comic.precio),
             'foto': comic.foto.url,
             'quantity': new_quantity,
             'stock': comic.stock
@@ -79,19 +72,38 @@ def logout_view(request):
     return redirect('index')
 
 def productos(request):
+    search_query = request.GET.get('search', '')
     comics = Comic.objects.all()
-    return render(request, 'productos.html', {'comics': comics})
+
+    if search_query:
+        comics = comics.filter(
+            Q(nombre__icontains=search_query) | 
+            Q(descripcion__icontains=search_query)
+        )
+
+    paginator = Paginator(comics, 10)  # 10 cómics por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'page_obj': page_obj,
+        'search_query': search_query
+    }
+
+    return render(request, 'productos.html', context)
 
 def get_comics(request):
     comics = Comic.objects.all()
     data = [{
+        'id': comic.id,
         'nombre': comic.nombre,
-        'precio': float(comic.precio),
-        'foto': comic.foto.url,
+        'precio': int(comic.precio),
+        'foto': f'/static/img/{comic.foto.name.split("/")[-1]}' if comic.foto else '/static/img/default.jpg',
         'descripcion': comic.descripcion,
         'stock': comic.stock
     } for comic in comics]
     return JsonResponse(data, safe=False)
+
 
 @require_GET
 def check_login_status(request):
@@ -115,12 +127,11 @@ def login_view(request):
         if user is not None:
             login(request, user)
             
-            # Cargar los items del carrito del usuario
             cart_items = CarritoItem.objects.filter(usuario=user)
             cart = {}
             for item in cart_items:
                 cart[item.comic.nombre] = {
-                    'precio': float(item.comic.precio),
+                    'precio': int(item.comic.precio),
                     'foto': item.comic.foto.url,
                     'quantity': item.cantidad,
                     'stock': item.comic.stock
@@ -139,18 +150,6 @@ def login_view(request):
                 return render(request, 'login.html', {'error': 'Credenciales incorrectas'})
     
     return render(request, 'login.html')
-
-class CustomUserCreationForm(UserCreationForm):
-    email = forms.EmailField(required=True)
-
-    class Meta:
-        model = User
-        fields = ('username', 'email', 'password1', 'password2')
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field in self.fields:
-            self.fields[field].widget.attrs.update({'class': 'form-control', 'placeholder': field.capitalize()})
 
 @require_http_methods(["GET", "POST"])
 def register_view(request):
@@ -183,7 +182,7 @@ def get_item_count(request):
         count = sum(item.get('quantity', 0) for item in cart.values())
         return JsonResponse({'count': count})
     except Exception as e:
-        print(f"Error in get_item_count: {str(e)}")  # Para depuración
+        print(f"Error in get_item_count: {str(e)}")
         return JsonResponse({'error': str(e)}, status=500)
 
 @login_required
@@ -199,7 +198,6 @@ def get_cart_items(request):
             'subtotal': item['precio'] * item['quantity']
         })
     return JsonResponse({'cart_items': cart_items})
-
 
 def get_cart_item_count(request):
     cart = request.session.get('cart', {})
@@ -223,7 +221,6 @@ def remove_cart_item(request):
             request.session['cart'] = cart
             request.session.modified = True
             
-            # Eliminar el item del carrito en la base de datos
             CarritoItem.objects.filter(usuario=request.user, comic__nombre=comic_name).delete()
             
             cart_items = []
@@ -240,7 +237,7 @@ def remove_cart_item(request):
         else:
             return JsonResponse({'success': False, 'error': 'El cómic no existe en el carrito'}, status=404)
     except Exception as e:
-        print(f"Error en remove_cart_item: {str(e)}")  # Para depuración
+        print(f"Error en remove_cart_item: {str(e)}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @login_required
@@ -269,7 +266,6 @@ def update_cart_item_quantity(request):
             request.session['cart'] = cart
             request.session.modified = True
             
-            # Actualizar el item del carrito en la base de datos
             CarritoItem.objects.filter(usuario=request.user, comic=comic).update(cantidad=new_quantity)
             
             cart_items = []
@@ -312,14 +308,11 @@ def submit_envio(request):
                 return JsonResponse({'success': False, 'error': f'Campo requerido: {field}'}, status=400)
         pedido = Pedido.objects.create(**data)
         logger.info(f"Pedido creado con ID: {pedido.id}")
-        # Obtener los items del carrito desde la solicitud POST
         cart_items = json.loads(request.POST.get('cart_items', '[]'))
         logger.info(f"Items del carrito recibidos: {cart_items}")
-        # Verificar si hay items en el carrito
         if not cart_items:
             logger.warning("No se encontraron items en el carrito")
             return JsonResponse({'success': False, 'error': 'No se encontraron items en el carrito'}, status=400)
-        # Crear los detalles del pedido
         for item in cart_items:
             comic_nombre = item.get('nombre')
             cantidad = item.get('quantity')
@@ -333,10 +326,8 @@ def submit_envio(request):
                 cantidad=cantidad,
                 precio_unitario=precio_unitario
             )
-        # Obtener el correo del usuario autenticado
         user_email = request.user.email
         logger.info(f"Correo del usuario: {user_email}")
-        # Enviar correo electrónico
         subject = 'Confirmación de pedido'
         message = f"""
             Gracias por tu pedido, {data['nombre_completo']}!
@@ -346,7 +337,6 @@ def submit_envio(request):
             Forma de pago: {pedido.get_forma_pago_display()}
             Cómics comprados:
         """
-        # Agregar los detalles de los cómics comprados al mensaje
         for detalle in pedido.detalles.all():
             message += f"""
             - {detalle.comic_nombre} (Cantidad: {detalle.cantidad}, Precio unitario: ${detalle.precio_unitario})
@@ -355,11 +345,10 @@ def submit_envio(request):
             Nos pondremos en contacto contigo pronto para confirmar el envío.
         """
         from_email = settings.EMAIL_HOST_USER
-        recipient_list = [user_email]  # Usa el email del usuario autenticado
+        recipient_list = [user_email]
         logger.info("Enviando correo electrónico")
         send_mail(subject, message, from_email, recipient_list)
         logger.info("Correo electrónico enviado con éxito")
-        # Limpiar el carrito después de enviar el correo
         request.session['cart'] = {}
         request.session.modified = True
         return JsonResponse({'success': True})
@@ -368,8 +357,27 @@ def submit_envio(request):
         logger.error(traceback.format_exc())
         return JsonResponse({'success': False, 'error': 'Error interno del servidor'}, status=500)
 
-    
-    
 @ensure_csrf_cookie
 def index(request):
     return render(request, 'index.html')
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def edit_comic(request, comic_id):
+    comic = get_object_or_404(Comic, id=comic_id)
+    if request.method == 'POST':
+        form = ComicForm(request.POST, request.FILES, instance=comic)
+        if form.is_valid():
+            form.save()
+            return redirect('productos')
+    else:
+        form = ComicForm(instance=comic)
+    return render(request, 'edit_comic.html', {'form': form, 'comic': comic})
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def delete_comic(request, comic_id):
+    comic = get_object_or_404(Comic, id=comic_id)
+    if request.method == 'POST':
+        comic.delete()
+        return redirect('productos')
