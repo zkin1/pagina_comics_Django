@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function () {
         filteredComicsContainer.empty();
 
         comicData.forEach((comic, index) => {
-            const comicImageUrl = `/static${comic.foto}`;
+            const comicImageUrl = comic.foto;
         
             const comicCard = `
               <div class="col-md-4 mb-4">
