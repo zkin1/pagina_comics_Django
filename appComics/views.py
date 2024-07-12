@@ -337,9 +337,11 @@ def submit_envio(request):
             Forma de pago: {pedido.get_forma_pago_display()}
             Cómics comprados:
         """
+        from django.contrib.humanize.templatetags.humanize import intcomma
         for detalle in pedido.detalles.all():
+            precio_unitario_formateado = intcomma(int(float(detalle.precio_unitario)))
             message += f"""
-            - {detalle.comic_nombre} (Cantidad: {detalle.cantidad}, Precio unitario: ${detalle.precio_unitario})
+            - {detalle.comic_nombre} (Cantidad: {detalle.cantidad}, Precio unitario: ${precio_unitario_formateado})
             """
         message += """
             Nos pondremos en contacto contigo pronto para confirmar el envío.
