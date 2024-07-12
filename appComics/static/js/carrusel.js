@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Generar elementos del carrusel
             productos.forEach((producto, index) => {
-                const comicImageUrl = `/static${producto.foto}`;
+                const comicImageUrl = producto.foto
 
                 const carouselItem = document.createElement('div');
                 carouselItem.classList.add('carousel-item');
@@ -72,7 +72,7 @@ function showComicModal(comic) {
                     <div class="modal-body">
                         <div class="row">
                             <div class="col-md-4">
-                                <img src="/static${comic.foto}" class="img-fluid" alt="${comic.nombre}">
+                                <img src="${comic.foto}" class="img-fluid" alt="${comic.nombre}">
                             </div>
                             <div class="col-md-8">
                                 <p><strong>Descripción:</strong> ${comic.descripcion}</p>
