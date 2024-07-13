@@ -1,0 +1,106 @@
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Panel de Administración de Cómics</h2>
+
+    <!-- Botón para crear nuevo cómic -->
+    <button type="button" class="btn btn-primary mb-3" data-toggle="modal" data-target="#createComicModal">
+        Crear Nuevo Cómic
+    </button>
+
+    <!-- Tabla de cómics -->
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for comic in comics %}
+            <tr>
+                <td>{{ comic.id }}</td>
+                <td>{{ comic.nombre }}</td>
+                <td>${{ comic.precio }}</td>
+                <td>{{ comic.stock }}</td>
+                <td>
+                    <button class="btn btn-info btn-sm view-comic" data-id="{{ comic.id }}">Ver</button>
+                    <button class="btn btn-warning btn-sm edit-comic" data-id="{{ comic.id }}">Editar</button>
+                    <button class="btn btn-danger btn-sm delete-comic" data-id="{{ comic.id }}">Eliminar</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal para crear/editar cómic -->
+<div class="modal fade" id="comicModal" tabindex="-1" role="dialog" aria-labelledby="comicModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="comicModalLabel">Cómic</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="comicForm">
+                    {% csrf_token %}
+                    <input type="hidden" id="comicId">
+                    <div class="form-group">
+                        <label for="nombre">Nombre</label>
+                        <input type="text" class="form-control" id="nombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="descripcion">Descripción</label>
+                        <textarea class="form-control" id="descripcion" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="precio">Precio</label>
+                        <input type="number" class="form-control" id="precio" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="stock">Stock</label>
+                        <input type="number" class="form-control" id="stock" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="foto">Foto</label>
+                        <input type="file" class="form-control-file" id="foto">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" id="saveComic">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para ver detalles del cómic -->
+<div class="modal fade" id="viewComicModal" tabindex="-1" role="dialog" aria-labelledby="viewComicModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewComicModalLabel">Detalles del Cómic</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="viewComicDetails">
+                <!-- Los detalles del cómic se insertarán aquí dinámicamente -->
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/admin_comics.js' %}"></script>
+{% endblock %}

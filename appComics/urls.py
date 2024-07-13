@@ -7,6 +7,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
+    path('admin_comics/', views.admin_comics, name='admin_comics'),
     path('', views.index, name='index'),
     path('productos/', views.productos, name='productos'),
     path('productos/get_comics/', views.get_comics, name='get_comics'),
@@ -21,8 +22,10 @@ urlpatterns = [
     path('check-login-status/', views.check_login_status, name='check_login_status'),
     path('carro/remove_item/', views.remove_cart_item, name='remove_cart_item'),
     path('envio/', views.envio, name='envio'),
+    path('admin_comics/', views.admin_comics, name='admin_comics'),
     path('submit_envio/', views.submit_envio, name='submit_envio'),
     path('carro/get_item_count/', views.get_item_count, name='get_item_count')
+    
 ]
 
 if settings.DEBUG:

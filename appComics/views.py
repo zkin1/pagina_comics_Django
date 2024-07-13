@@ -10,7 +10,10 @@ from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.core.paginator import Paginator
 from django.db.models import Q, Sum
 from django.core.mail import send_mail
+from django.contrib.auth.views import LoginView
+from django.contrib.admin.views.decorators import staff_member_required
 from django.conf import settings
+from django.urls import reverse_lazy
 from .models import Comic, UsuarioComic, CarritoItem, Pedido, DetallesPedido
 from .forms import ComicForm, CustomUserCreationForm
 import json
@@ -383,3 +386,27 @@ def delete_comic(request, comic_id):
     if request.method == 'POST':
         comic.delete()
         return redirect('productos')
+    
+
+@staff_member_required(login_url='admin:login')
+def admin_comics(request):
+    if not request.user.is_authenticated or not request.user.is_staff:
+        return redirect('admin:login')
+    comics = Comic.objects.all()
+    return render(request, 'admin_comics.html', {'comics': comics})
+
+
+class AdminLoginView(LoginView):
+    template_name = 'admin/login.html'
+    
+    def get_success_url(self):
+        return reverse_lazy('admin_comics')
+    
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        if self.request.user.is_staff:
+            return response
+        else:
+            messages.error(self.request, "No tienes permisos de administrador.")
+            self.request.session.flush()
+            return redirect('admin:login')
