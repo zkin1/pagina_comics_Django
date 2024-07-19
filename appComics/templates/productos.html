@@ -60,38 +60,25 @@
             </div>
         </form>
 
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Imagen</th>
-                    <th>Nombre</th>
-                    <th>Precio</th>
-                    <th>Stock</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for comic in page_obj %}
-                <tr>
-                    <td><img src="{% static 'img/'|add:comic.foto.name %}" alt="{{ comic.nombre }}" style="width: 50px; height: auto;"></td>
-                    <td>{{ comic.nombre }}</td>
-                    <td>${{ comic.precio|floatformat:0|intcomma }}</td>
-                    <td>{{ comic.stock }}</td>
-                    <td>
-                        <button class="btn btn-sm btn-primary view-details" data-toggle="modal" data-target="#comicModal" data-comic-id="{{ comic.id }}">Ver detalles</button>
-                        {% if user.is_staff %}
-                        <a href="{% url 'edit_comic' comic.id %}" class="btn btn-sm btn-warning">Editar</a>
-                        <a href="{% url 'delete_comic' comic.id %}" class="btn btn-sm btn-danger">Eliminar</a>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="5" class="text-center">No se encontraron cómics</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="row">
+            {% for comic in page_obj %}
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <img src="{% static 'img/'|add:comic.foto.name %}" class="card-img-top" alt="{{ comic.nombre }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ comic.nombre }}</h5>
+                        <p class="card-text">Precio: ${{ comic.precio|floatformat:0|intcomma }}</p>
+                        <p class="card-text">Stock: {{ comic.stock }}</p>
+                        <button class="btn btn-primary view-details" data-toggle="modal" data-target="#comicModal" data-comic-id="{{ comic.id }}">Ver detalles</button>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <p class="text-center">No se encontraron cómics</p>
+            </div>
+            {% endfor %}
+        </div>
 
         <nav aria-label="Page navigation">
             <ul class="pagination justify-content-center">

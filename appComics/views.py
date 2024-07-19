@@ -410,3 +410,100 @@ class AdminLoginView(LoginView):
             messages.error(self.request, "No tienes permisos de administrador.")
             self.request.session.flush()
             return redirect('admin:login')
+        
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def edit_comic(request, comic_id):
+    comic = get_object_or_404(Comic, id=comic_id)
+    if request.method == 'POST':
+        form = ComicForm(request.POST, request.FILES, instance=comic)
+        if form.is_valid():
+            form.save()
+            return redirect('productos')
+    else:
+        form = ComicForm(instance=comic)
+    return render(request, 'edit_comic.html', {'form': form, 'comic': comic})
+
+def get_comic_details(request, comic_id):
+    comic = get_object_or_404(Comic, id=comic_id)
+    data = {
+        'id': comic.id,
+        'nombre': comic.nombre,
+        'descripcion': comic.descripcion,
+        'precio': str(comic.precio),
+        'stock': comic.stock,
+        'foto': comic.foto.url if comic.foto else ''
+    }
+    return JsonResponse(data)
+
+@require_POST
+def update_comic(request, comic_id):
+    comic = get_object_or_404(Comic, id=comic_id)
+    form = ComicForm(request.POST, request.FILES, instance=comic)
+    if form.is_valid():
+        comic = form.save()
+        return JsonResponse({
+            'success': True,
+            'comic': {
+                'id': comic.id,
+                'nombre': comic.nombre,
+                'descripcion': comic.descripcion,
+                'precio': str(comic.precio),
+                'stock': comic.stock,
+                'foto': comic.foto.url if comic.foto else ''
+            }
+        })
+    return JsonResponse({'success': False, 'errors': form.errors})
+
+@require_POST
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def delete_comic(request, comic_id):
+    comic = get_object_or_404(Comic, id=comic_id)
+    comic.delete()
+    return JsonResponse({'success': True})
+
+@require_POST
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+@csrf_exempt
+def create_comic(request):
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre')
+        descripcion = request.POST.get('descripcion')
+        precio = request.POST.get('precio')
+        stock = request.POST.get('stock')
+        foto = request.FILES.get('foto')
+
+        if not nombre or not precio or not stock:
+            return render(request, 'error.html', {'error': 'Todos los campos son obligatorios'})
+
+        try:
+            precio = float(precio)
+            stock = int(stock)
+        except ValueError:
+            return render(request, 'error.html', {'error': 'Precio y stock deben ser números válidos'})
+
+        comic = Comic(
+            nombre=nombre,
+            descripcion=descripcion,
+            precio=precio,
+            stock=stock,
+            foto=foto
+        )
+        comic.save()
+
+        return redirect('admin_comics')
+
+    return render(request, 'create_comic.html')
+
+
+
+
+@staff_member_required(login_url='admin:login')
+def admin_comics(request):
+    if not request.user.is_authenticated or not request.user.is_staff:
+        return redirect('admin:login')
+    comics = Comic.objects.all()
+    return render(request, 'admin_comics.html', {'comics': comics})
