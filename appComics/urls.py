@@ -25,6 +25,7 @@ urlpatterns += [
     path('update_comic/<int:comic_id>/', views.update_comic, name='update_comic'),
     path('delete_comic/<int:comic_id>/', views.delete_comic, name='delete_comic'),
     path('get_comic_details/<int:comic_id>/', views.get_comic_details, name='get_comic_details'),
+    path('edit_comic/<int:comic_id>/', views.edit_comic, name='edit_comic'),
 ]
 
 # Rutas del carrito

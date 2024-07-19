@@ -18,6 +18,7 @@ from .models import Comic, UsuarioComic, CarritoItem, Pedido, DetallesPedido
 from .forms import ComicForm, CustomUserCreationForm
 import json
 import traceback
+import os
 import logging
 
 logger = logging.getLogger(__name__)
@@ -419,11 +420,57 @@ def edit_comic(request, comic_id):
     if request.method == 'POST':
         form = ComicForm(request.POST, request.FILES, instance=comic)
         if form.is_valid():
-            form.save()
-            return redirect('productos')
+            # Verificar si se proporcionó una nueva foto
+            if 'foto' in request.FILES:
+                # Eliminar la foto anterior si existe
+                if comic.foto:
+                    old_foto_path = os.path.join("C:\\Users\\zkn\\Documents\\GitHub\\pagina_comics_Django\\appComics\\static\\img", comic.foto)
+                    if os.path.exists(old_foto_path):
+                        os.remove(old_foto_path)
+                
+                # Obtener el nombre de la nueva foto
+                foto_nombre = request.FILES['foto'].name
+                
+                # Construir la ruta completa de la nueva foto
+                foto_path = os.path.join("C:\\Users\\zkn\\Documents\\GitHub\\pagina_comics_Django\\appComics\\static\\img", foto_nombre)
+                
+                # Guardar la nueva foto en la ruta especificada
+                with open(foto_path, 'wb+') as destination:
+                    for chunk in request.FILES['foto'].chunks():
+                        destination.write(chunk)
+                
+                # Actualizar el campo 'foto' del objeto Comic con el nombre de la nueva foto
+                comic.foto = foto_nombre
+            
+            # Actualizar los demás campos del objeto Comic
+            comic.nombre = form.cleaned_data['nombre']
+            comic.descripcion = form.cleaned_data['descripcion']
+            comic.precio = form.cleaned_data['precio']
+            comic.stock = form.cleaned_data['stock']
+            
+            comic.save()
+            messages.success(request, 'Cómic actualizado con éxito')
+            return redirect('admin_comics')
     else:
         form = ComicForm(instance=comic)
     return render(request, 'edit_comic.html', {'form': form, 'comic': comic})
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def delete_comic(request, comic_id):
+    comic = get_object_or_404(Comic, id=comic_id)
+    if request.method == 'POST':
+        # Eliminar la foto del cómic si existe
+        if comic.foto:
+            foto_path = os.path.join("C:\\Users\\zkn\\Documents\\GitHub\\pagina_comics_Django\\appComics\\static\\img", comic.foto)
+            if os.path.exists(foto_path):
+                os.remove(foto_path)
+        
+        comic.delete()
+        messages.success(request, 'Cómic eliminado con éxito')
+        return redirect('admin_comics')
+    
+    return render(request, 'delete_comic.html', {'comic': comic})
 
 def get_comic_details(request, comic_id):
     comic = get_object_or_404(Comic, id=comic_id)
@@ -464,40 +511,57 @@ def delete_comic(request, comic_id):
     comic.delete()
     return JsonResponse({'success': True})
 
+
 @require_POST
 @login_required
 @user_passes_test(lambda u: u.is_staff)
 @csrf_exempt
 def create_comic(request):
     if request.method == 'POST':
-        nombre = request.POST.get('nombre')
-        descripcion = request.POST.get('descripcion')
-        precio = request.POST.get('precio')
-        stock = request.POST.get('stock')
-        foto = request.FILES.get('foto')
-
-        if not nombre or not precio or not stock:
-            return render(request, 'error.html', {'error': 'Todos los campos son obligatorios'})
-
         try:
+            nombre = request.POST.get('nombre')
+            descripcion = request.POST.get('descripcion')
+            precio = request.POST.get('precio')
+            stock = request.POST.get('stock')
+            foto = request.FILES.get('foto')
+
+            if not nombre or not precio or not stock:
+                return render(request, 'error.html', {'error': 'Todos los campos son obligatorios'})
+
             precio = float(precio)
             stock = int(stock)
+
+            comic = Comic(
+                nombre=nombre,
+                descripcion=descripcion,
+                precio=precio,
+                stock=stock
+            )
+
+            if foto:
+                # Obtener el nombre original de la foto
+                foto_nombre = foto.name
+                
+                # Construir la ruta completa de la foto
+                foto_path = os.path.join("C:\\Users\\zkn\\Documents\\GitHub\\pagina_comics_Django\\appComics\\static\\img", foto_nombre)
+                
+                # Guardar la foto en la ruta especificada
+                with open(foto_path, 'wb+') as destination:
+                    for chunk in foto.chunks():
+                        destination.write(chunk)
+                
+                # Guardar solo el nombre de la foto en el campo 'foto' del objeto Comic
+                comic.foto = foto_nombre
+
+            comic.save()
+
+            messages.success(request, 'Cómic creado con éxito')
+            return redirect('admin_comics')
+
         except ValueError:
             return render(request, 'error.html', {'error': 'Precio y stock deben ser números válidos'})
 
-        comic = Comic(
-            nombre=nombre,
-            descripcion=descripcion,
-            precio=precio,
-            stock=stock,
-            foto=foto
-        )
-        comic.save()
-
-        return redirect('admin_comics')
-
     return render(request, 'create_comic.html')
-
 
 
 
